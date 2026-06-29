@@ -466,4 +466,36 @@
       const m = matches[matchId];
       document.getElementById('modalRound').textContent = m.round;
       document.getElementById('modalFlag1').textContent = m.team1.flag;
-      document.getElementById('modalFlag2').te
+      document.getElementById('modalFlag2').textContent = m.team2.flag;
+      document.getElementById('modalName1').textContent = m.team1.name;
+      document.getElementById('modalName2').textContent = m.team2.name;
+      document.getElementById('modalScore1').textContent = m.score1 !== null ? m.score1 : '-';
+      document.getElementById('modalScore2').textContent = m.score2 !== null ? m.score2 : '-';
+      document.getElementById('modalDate').textContent = m.date;
+      document.getElementById('modalVenue').textContent = m.venue;
+
+      const statusEl = document.getElementById('modalStatus');
+      if (m.score1 !== null && m.score2 !== null) {
+        statusEl.textContent = 'Full Time';
+        statusEl.className = 'modal-status status-finished';
+      } else if (m.date === 'TBD') {
+        statusEl.textContent = 'Not Yet Scheduled';
+        statusEl.className = 'modal-status status-tbd';
+      } else {
+        statusEl.textContent = 'Upcoming';
+        statusEl.className = 'modal-status status-upcoming';
+      }
+
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+  </script>
+</body>
+</html>
