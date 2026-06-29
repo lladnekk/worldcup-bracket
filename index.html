@@ -23,53 +23,447 @@
       color: #d4a017;
       letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .subtitle {
-      color: #888;
-      font-size: 0.9rem;
+      color: #666;
+      font-size: 0.85rem;
       letter-spacing: 2px;
-      margin-bottom: 50px;
+      margin-bottom: 40px;
     }
 
-    .coming-soon {
-      margin-top: 60px;
+    /* ── BRACKET GRID ── */
+    .bracket-wrapper {
+      width: 100%;
+      max-width: 1400px;
+      overflow-x: auto;
+    }
+
+    .bracket {
+      display: flex;
+      gap: 0;
+      align-items: stretch;
+      min-width: 900px;
+    }
+
+    .round {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      flex: 1;
+      padding: 0 6px;
+    }
+
+    .round-label {
       text-align: center;
-      color: #444;
-      font-size: 1.1rem;
+      font-size: 0.65rem;
       letter-spacing: 2px;
+      color: #d4a017;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #222;
     }
 
-    .trophy {
-      font-size: 5rem;
+    /* ── MATCH CARD ── */
+    .match {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 4px 0;
+      position: relative;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 140px;
+      position: relative;
+    }
+
+    .team:hover {
+      border-color: #d4a017;
+      background: #222;
+    }
+
+    .team.winner {
+      border-color: #d4a017;
+      background: #1e1a0e;
+    }
+
+    .team.tbd {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .team-flag {
+      font-size: 1.3rem;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .team-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .team-score {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #d4a017;
+      min-width: 16px;
+      text-align: right;
+    }
+
+    /* ── CONNECTOR LINES ── */
+    .match-connector {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      width: 6px;
+      height: 1px;
+      background: #333;
+    }
+
+    /* ── CENTER TROPHY ── */
+    .trophy-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      min-width: 120px;
+    }
+
+    .trophy-icon {
+      font-size: 3.5rem;
+      filter: drop-shadow(0 0 20px #d4a01788);
+    }
+
+    .trophy-label {
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      color: #d4a017;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* ── POPUP MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: #141414;
+      border: 1px solid #d4a017;
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 380px;
+      width: 90%;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { color: #fff; }
+
+    .modal-round {
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: #d4a017;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .modal-teams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 20px;
     }
 
-    .status-bar {
-      background: #1a1a1a;
-      border: 1px solid #d4a017;
-      border-radius: 8px;
-      padding: 16px 32px;
-      color: #d4a017;
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      margin-top: 30px;
+    .modal-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
     }
+
+    .modal-flag { font-size: 2.5rem; }
+
+    .modal-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-score-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+    }
+
+    .modal-score {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #d4a017;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .modal-vs {
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 1px;
+    }
+
+    .modal-divider {
+      border: none;
+      border-top: 1px solid #222;
+      margin: 16px 0;
+    }
+
+    .modal-info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .modal-info-icon { font-size: 1rem; min-width: 20px; }
+
+    .modal-info-label {
+      font-size: 0.65rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .modal-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 14px;
+    }
+
+    .status-finished { background: #1a2e1a; color: #4caf50; border: 1px solid #4caf50; }
+    .status-live     { background: #2e1a1a; color: #f44336; border: 1px solid #f44336; animation: pulse 1s infinite; }
+    .status-upcoming { background: #1a1a2e; color: #64b5f6; border: 1px solid #64b5f6; }
+    .status-tbd      { background: #1e1e1e; color: #555;    border: 1px solid #333; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
   </style>
 </head>
 <body>
 
   <h1>World Cup 2026</h1>
-  <p class="subtitle">Interactive Bracket</p>
+  <p class="subtitle">INTERACTIVE BRACKET — CLICK ANY MATCH</p>
 
-  <div class="trophy">🏆</div>
-
-  <div class="status-bar">⚽ BRACKET COMING SOON — PHASE 2 IN PROGRESS</div>
-
-  <div class="coming-soon">
-    <p>Built by lladnekk</p>
+  <div class="bracket-wrapper">
+    <div class="bracket" id="bracket"></div>
   </div>
 
-</body>
-</html>
+  <!-- POPUP MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-round" id="modalRound"></div>
+      <div class="modal-teams">
+        <div class="modal-team">
+          <div class="modal-flag" id="modalFlag1"></div>
+          <div class="modal-name" id="modalName1"></div>
+        </div>
+        <div class="modal-score-box">
+          <div class="modal-score" id="modalScore1"></div>
+          <div class="modal-vs">VS</div>
+          <div class="modal-score" id="modalScore2"></div>
+        </div>
+        <div class="modal-team">
+          <div class="modal-flag" id="modalFlag2"></div>
+          <div class="modal-name" id="modalName2"></div>
+        </div>
+      </div>
+      <hr class="modal-divider"/>
+      <div class="modal-info-row">
+        <div class="modal-info-icon">📅</div>
+        <div>
+          <span class="modal-info-label">Date & Time</span>
+          <span id="modalDate"></span>
+        </div>
+      </div>
+      <div class="modal-info-row">
+        <div class="modal-info-icon">📍</div>
+        <div>
+          <span class="modal-info-label">Venue</span>
+          <span id="modalVenue"></span>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <span class="modal-status" id="modalStatus"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── MATCH DATA ──────────────────────────────────────────────
+    // This is where all match info lives. Update scores here as
+    // the tournament progresses. score: null = not played yet.
+    const matches = {
+      // ROUND OF 32 (left side)
+      r32_1:  { team1: {name:"USA",       flag:"🇺🇸"}, team2: {name:"Bosnia",    flag:"🇧🇦"}, score1: null, score2: null, date:"Jun 22, 2026 · 3:00 PM ET",  venue:"MetLife Stadium, New Jersey",    round:"Round of 32", winner: null },
+      r32_2:  { team1: {name:"Morocco",   flag:"🇲🇦"}, team2: {name:"Netherlands",flag:"🇳🇱"}, score1: null, score2: null, date:"Jun 22, 2026 · 6:00 PM ET",  venue:"SoFi Stadium, Los Angeles",      round:"Round of 32", winner: null },
+      r32_3:  { team1: {name:"Portugal",  flag:"🇵🇹"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+      r32_4:  { team1: {name:"Croatia",   flag:"🇭🇷"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+      r32_5:  { team1: {name:"Spain",     flag:"🇪🇸"}, team2: {name:"Austria",   flag:"🇦🇹"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+      r32_6:  { team1: {name:"Canada",    flag:"🇨🇦"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+      r32_7:  { team1: {name:"Sweden",    flag:"🇸🇪"}, team2: {name:"France",    flag:"🇫🇷"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+      r32_8:  { team1: {name:"Germany",   flag:"🇩🇪"}, team2: {name:"Brazil",    flag:"🇧🇷"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+
+      // ROUND OF 32 (right side)
+      r32_9:  { team1: {name:"Japan",     flag:"🇯🇵"}, team2: {name:"Ireland",   flag:"🇮🇪"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_10: { team1: {name:"Norway",    flag:"🇳🇴"}, team2: {name:"Mexico",    flag:"🇲🇽"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_11: { team1: {name:"Ecuador",   flag:"🇪🇨"}, team2: {name:"England",   flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_12: { team1: {name:"DR Congo",  flag:"🇨🇩"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_13: { team1: {name:"Argentina", flag:"🇦🇷"}, team2: {name:"Cape Verde", flag:"🇨🇻"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_14: { team1: {name:"Australia", flag:"🇦🇺"}, team2: {name:"Egypt",     flag:"🇪🇬"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_15: { team1: {name:"Algeria",   flag:"🇩🇿"}, team2: {name:"Switzerland",flag:"🇨🇭"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+      r32_16: { team1: {name:"Belgium",   flag:"🇧🇪"}, team2: {name:"Senegal",   flag:"🇸🇳"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+
+      // ROUND OF 16
+      r16_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_3: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_4: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_5: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_6: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_7: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+      r16_8: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+
+      // QUARTERS
+      qf_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
+      qf_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
+      qf_3: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
+      qf_4: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
+
+      // SEMIS
+      sf_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Semi-Final", winner: null },
+      sf_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Semi-Final", winner: null },
+
+      // FINAL
+      final: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"Jul 19, 2026", venue:"MetLife Stadium, New Jersey", round:"FINAL", winner: null },
+    };
+
+    // ── BRACKET STRUCTURE ────────────────────────────────────────
+    const structure = [
+      { label: "Round of 32", matches: ["r32_1","r32_2","r32_3","r32_4","r32_5","r32_6","r32_7","r32_8"] },
+      { label: "Round of 16", matches: ["r16_1","r16_2","r16_3","r16_4"] },
+      { label: "Quarter-Finals", matches: ["qf_1","qf_2"] },
+      { label: "Semi-Finals", matches: ["sf_1"] },
+      { label: "🏆 FINAL", matches: ["final"] },
+      { label: "Semi-Finals", matches: ["sf_2"] },
+      { label: "Quarter-Finals", matches: ["qf_3","qf_4"] },
+      { label: "Round of 16", matches: ["r16_5","r16_6","r16_7","r16_8"] },
+      { label: "Round of 32", matches: ["r32_9","r32_10","r32_11","r32_12","r32_13","r32_14","r32_15","r32_16"] },
+    ];
+
+    // ── RENDER BRACKET ───────────────────────────────────────────
+    function buildTeamEl(teamData, score, isWinner, matchId, teamNum) {
+      const div = document.createElement('div');
+      div.className = 'team' + (isWinner ? ' winner' : '') + (teamData.name === 'TBD' ? ' tbd' : '');
+      div.innerHTML = `
+        <span class="team-flag">${teamData.flag}</span>
+        <span class="team-name">${teamData.name}</span>
+        <span class="team-score">${score !== null ? score : ''}</span>
+      `;
+      if (teamData.name !== 'TBD') {
+        div.onclick = () => openModal(matchId);
+      }
+      return div;
+    }
+
+    function buildMatchEl(matchId) {
+      const m = matches[matchId];
+      const div = document.createElement('div');
+      div.className = 'match';
+      div.appendChild(buildTeamEl(m.team1, m.score1, m.winner === 1, matchId, 1));
+      div.appendChild(buildTeamEl(m.team2, m.score2, m.winner === 2, matchId, 2));
+      const connector = document.createElement('div');
+      connector.className = 'match-connector';
+      div.appendChild(connector);
+      return div;
+    }
+
+    const bracketEl = document.getElementById('bracket');
+
+    structure.forEach((round, i) => {
+      if (i === 4) {
+        // Insert trophy center
+        const trophy = document.createElement('div');
+        trophy.className = 'trophy-center';
+        trophy.innerHTML = `<div class="trophy-icon">🏆</div><div class="trophy-label">Champion</div>`;
+        bracketEl.appendChild(trophy);
+      }
+
+      const col = document.createElement('div');
+      col.className = 'round';
+      const label = document.createElement('div');
+      label.className = 'round-label';
+      label.textContent = round.label;
+      col.appendChild(label);
+      round.matches.forEach(mId => col.appendChild(buildMatchEl(mId)));
+      bracketEl.appendChild(col);
+    });
+
+    // ── MODAL ────────────────────────────────────────────────────
+    function openModal(matchId) {
+      const m = matches[matchId];
+      document.getElementById('modalRound').textContent = m.round;
+      document.getElementById('modalFlag1').textContent = m.team1.flag;
+      document.getElementById('modalFlag2').te
