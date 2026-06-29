@@ -11,12 +11,8 @@
     --gold: #c9a84c;
     --gold-dim: #5a4520;
     --bg: #0c0c0c;
-    --node-bg: #1a1a1a;
     --text: #e0e0e0;
     --muted: #555;
-    --done: #4caf50;
-    --live: #e03c3c;
-    --upcoming: #4a7fd4;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -53,9 +49,26 @@
 
   .bracket-scene {
     position: relative;
-    width: min(920px, 98vw);
-    height: min(920px, 98vw);
+    width: min(960px, 98vw);
+    height: min(960px, 98vw);
     margin: 0 auto;
+  }
+
+  /* Radial glow from center */
+  .center-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(ellipse at center,
+      rgba(201,168,76,0.18) 0%,
+      rgba(201,168,76,0.07) 30%,
+      rgba(201,168,76,0.02) 60%,
+      transparent 75%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
   }
 
   .lines-svg {
@@ -73,7 +86,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     cursor: pointer;
     z-index: 10;
   }
@@ -91,42 +104,33 @@
   .match-node:hover .flags-pair {
     transform: scale(1.1);
     border-color: var(--gold);
-    box-shadow: 0 0 14px rgba(201,168,76,0.3);
+    box-shadow: 0 0 14px rgba(201,168,76,0.35);
   }
 
-  .flag-img {
-    object-fit: cover;
-    display: block;
-    flex-shrink: 0;
-  }
+  .flag-img { object-fit: cover; display: block; flex-shrink: 0; }
+  .flag-divider { width: 1px; background: #2a2a2a; flex-shrink: 0; }
 
-  .flag-divider {
-    width: 1px;
-    background: #2a2a2a;
-    flex-shrink: 0;
-  }
+  .sz-r32  .flags-pair   { height: 44px; }
+  .sz-r32  .flag-img     { width: 38px; height: 44px; }
+  .sz-r32  .flag-divider { height: 44px; }
 
-  .sz-r32  .flags-pair  { height: 46px; }
-  .sz-r32  .flag-img    { width: 40px; height: 46px; }
-  .sz-r32  .flag-divider{ height: 46px; }
+  .sz-r16  .flags-pair   { height: 36px; }
+  .sz-r16  .flag-img     { width: 31px; height: 36px; }
+  .sz-r16  .flag-divider { height: 36px; }
 
-  .sz-r16  .flags-pair  { height: 38px; }
-  .sz-r16  .flag-img    { width: 33px; height: 38px; }
-  .sz-r16  .flag-divider{ height: 38px; }
+  .sz-qf   .flags-pair   { height: 30px; }
+  .sz-qf   .flag-img     { width: 26px; height: 30px; }
+  .sz-qf   .flag-divider { height: 30px; }
 
-  .sz-qf   .flags-pair  { height: 32px; }
-  .sz-qf   .flag-img    { width: 28px; height: 32px; }
-  .sz-qf   .flag-divider{ height: 32px; }
-
-  .sz-sf   .flags-pair  { height: 26px; }
-  .sz-sf   .flag-img    { width: 22px; height: 26px; }
-  .sz-sf   .flag-divider{ height: 26px; }
+  .sz-sf   .flags-pair   { height: 24px; }
+  .sz-sf   .flag-img     { width: 20px; height: 24px; }
+  .sz-sf   .flag-divider { height: 24px; }
 
   .s-done     .flags-pair { border-color: #4caf50; }
   .s-upcoming .flags-pair { border-color: #4a7fd4; }
   .s-live     .flags-pair { border-color: #e03c3c; animation: pulse-b 1s infinite; }
   .s-tbd      .flags-pair { border-color: #222; }
-  .s-winner   .flags-pair { border-color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.35); }
+  .s-winner   .flags-pair { border-color: var(--gold); box-shadow: 0 0 10px rgba(201,168,76,0.35); }
 
   @keyframes pulse-b {
     0%,100%{ box-shadow: 0 0 0 0 rgba(224,60,60,0.5); }
@@ -134,7 +138,7 @@
   }
 
   .match-label {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
     font-weight: 600;
     color: var(--muted);
     white-space: nowrap;
@@ -145,15 +149,15 @@
     text-overflow: ellipsis;
     line-height: 1.2;
   }
-  .match-label.gold { color: var(--gold); }
   .score-label {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--gold);
     letter-spacing: 2px;
     line-height: 1;
   }
 
+  /* ── TROPHY ── */
   .trophy-node {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -161,19 +165,35 @@
     cursor: pointer;
   }
   .trophy-circle {
-    width: 68px; height: 68px;
+    width: 80px; height: 80px;
     border-radius: 50%;
-    background: radial-gradient(circle, #2a1e00, #0f0c00);
-    border: 2.5px solid var(--gold);
+    background: radial-gradient(circle at 40% 35%, #3d2a00, #1a1200 60%, #0a0800);
+    border: 2px solid #8a6a20;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.9rem;
-    box-shadow: 0 0 32px rgba(201,168,76,0.4);
-    transition: transform .18s;
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.15),
+      0 0 20px rgba(201,168,76,0.3),
+      0 0 50px rgba(201,168,76,0.12);
+    transition: transform .18s, box-shadow .18s;
+    overflow: hidden;
   }
-  .trophy-node:hover .trophy-circle { transform: scale(1.1); }
+  .trophy-node:hover .trophy-circle {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.3),
+      0 0 28px rgba(201,168,76,0.5),
+      0 0 60px rgba(201,168,76,0.2);
+  }
+  .trophy-img {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(201,168,76,0.7));
+  }
 
+  /* ── LEGEND ── */
   .legend {
     display: flex; gap: 22px; margin-top: 18px;
     flex-wrap: wrap; justify-content: center;
@@ -185,6 +205,7 @@
   }
   .ldot { width:8px; height:8px; border-radius:50%; }
 
+  /* ── MODAL ── */
   .overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.82); z-index: 300;
@@ -218,9 +239,7 @@
   }
   .modal-tname { font-size:0.78rem; font-weight:700; text-align:center; }
   .modal-tname.w { color:var(--gold); }
-  .modal-scores {
-    display:flex; flex-direction:column; align-items:center; gap:3px; padding:0 8px;
-  }
+  .modal-scores { display:flex; flex-direction:column; align-items:center; gap:3px; padding:0 8px; }
   .modal-scoreline {
     font-family:'Bebas Neue',sans-serif;
     font-size:2.4rem; letter-spacing:4px; color:var(--gold); line-height:1;
@@ -239,24 +258,9 @@
   .b-done     { background:#0d1f0d; color:#4caf50; border:1px solid #4caf50; }
   .b-upcoming { background:#0d1020; color:#4a7fd4; border:1px solid #4a7fd4; }
   .b-tbd      { background:#151515; color:var(--muted); border:1px solid #333; }
-  .b-live     { background:#1f0d0d; color:#e03c3c; border:1px solid #e03c3c; }
-
-  .modal-prob {
-    margin-top: 14px;
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-align: center;
-    letter-spacing: 1px;
-  }
-  .prob-bar {
-    display: flex;
-    height: 6px;
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 6px;
-    gap: 2px;
-  }
-  .prob-seg { height: 100%; border-radius: 3px; }
+  .modal-prob { margin-top:14px; font-size:0.7rem; color:var(--muted); text-align:center; letter-spacing:1px; }
+  .prob-bar { display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:6px; gap:2px; }
+  .prob-seg { height:100%; border-radius:3px; }
 </style>
 </head>
 <body>
@@ -267,6 +271,7 @@
 </header>
 
 <div class="bracket-scene" id="scene">
+  <div class="center-glow"></div>
   <svg class="lines-svg" id="linesSvg"></svg>
 </div>
 
@@ -324,8 +329,6 @@ const FLAGS = {
   "Spain":"es","Austria":"at","Portugal":"pt","Croatia":"hr",
   "Switzerland":"ch","Algeria":"dz","Argentina":"ar","Cape Verde":"cv",
   "Colombia":"co","Ghana":"gh","Australia":"au","Egypt":"eg",
-  "New Zealand":"nz","Saudi Arabia":"sa","Panama":"pa","Jordan":"jo",
-  "Uzbekistan":"uz","IR Iran":"ir",
   "TBD":"xx"
 };
 
@@ -335,148 +338,138 @@ function flagUrl(name, w=40, h=30) {
   return `https://flagcdn.com/w${w*2}/${code}.png`;
 }
 
-// ── MATCH DATA ──────────────────────────────────────────
-// Real R32 bracket order (matches 0-15 go clockwise around the ring)
-// Completed results are filled in. w:1=n1 won, w:2=n2 won
-// prob: [team1%, draw%, team2%] for upcoming matches
 const M = [
-  // R32 — ids 0-15
-  // Slot 0 (top, ~12 o'clock going clockwise)
-  {id:0,  r:"Round of 32", n1:"South Africa", n2:"Canada",      s1:0,   s2:1,   w:2,    date:"Jun 28 · 2:00 PM CDT",   venue:"SoFi Stadium, Los Angeles",              prob:null},
-  {id:1,  r:"Round of 32", n1:"Brazil",       n2:"Japan",       s1:null,s2:null,w:null,  date:"Jun 29 · 12:00 PM CDT",  venue:"NRG Stadium, Houston",                   prob:[57.1,25.3,17.6]},
-  {id:2,  r:"Round of 32", n1:"Germany",      n2:"Paraguay",    s1:null,s2:null,w:null,  date:"Jun 29 · 3:30 PM CDT",   venue:"Gillette Stadium, Foxborough",            prob:[73.2,17.1,9.7]},
-  {id:3,  r:"Round of 32", n1:"Netherlands",  n2:"Morocco",     s1:null,s2:null,w:null,  date:"Jun 29 · 8:00 PM CDT",   venue:"Estadio BBVA, Monterrey",                prob:[42.2,30.0,27.8]},
-  {id:4,  r:"Round of 32", n1:"Ivory Coast",  n2:"Norway",      s1:null,s2:null,w:null,  date:"Jun 30 · 12:00 PM CDT",  venue:"AT&T Stadium, Arlington",                prob:[26.0,27.1,46.9]},
-  {id:5,  r:"Round of 32", n1:"France",       n2:"Sweden",      s1:null,s2:null,w:null,  date:"Jun 30 · 4:00 PM CDT",   venue:"MetLife Stadium, New Jersey",             prob:[77.0,14.4,8.6]},
-  {id:6,  r:"Round of 32", n1:"Mexico",       n2:"Ecuador",     s1:null,s2:null,w:null,  date:"Jun 30 · 8:00 PM CDT",   venue:"Estadio Azteca, Mexico City",             prob:[42.8,31.7,25.5]},
-  {id:7,  r:"Round of 32", n1:"England",      n2:"DR Congo",    s1:null,s2:null,w:null,  date:"Jul 1 · 11:00 AM CDT",   venue:"Mercedes-Benz Stadium, Atlanta",          prob:[76.2,16.2,7.6]},
-  {id:8,  r:"Round of 32", n1:"Belgium",      n2:"Senegal",     s1:null,s2:null,w:null,  date:"Jul 1 · 3:00 PM CDT",    venue:"Lumen Field, Seattle",                   prob:[44.4,29.2,26.4]},
-  {id:9,  r:"Round of 32", n1:"USA",          n2:"Bosnia & Herz.",s1:null,s2:null,w:null,date:"Jul 1 · 7:00 PM CDT",   venue:"Levi's Stadium, Santa Clara",             prob:[71.5,18.3,10.2]},
-  {id:10, r:"Round of 32", n1:"Spain",        n2:"Austria",     s1:null,s2:null,w:null,  date:"Jul 2 · 2:00 PM CDT",    venue:"SoFi Stadium, Los Angeles",              prob:[73.9,17.3,8.8]},
-  {id:11, r:"Round of 32", n1:"Portugal",     n2:"Colombia",    s1:0,   s2:0,   w:0,     date:"Jun 27 · 6:30 PM CDT",   venue:"BMO Field, Toronto",                     prob:null},
-  {id:12, r:"Round of 32", n1:"Switzerland",  n2:"Algeria",     s1:null,s2:null,w:null,  date:"Jul 2 · 8:00 PM CDT",    venue:"BC Place, Vancouver",                    prob:null},
-  {id:13, r:"Round of 32", n1:"Argentina",    n2:"Cape Verde",  s1:null,s2:null,w:null,  date:"Jul 3 · 2:00 PM CDT",    venue:"Hard Rock Stadium, Miami",               prob:null},
-  {id:14, r:"Round of 32", n1:"Croatia",      n2:"Ghana",       s1:2,   s2:1,   w:1,     date:"Jun 27 · 4:00 PM CDT",   venue:"Arrowhead Stadium, Kansas City",         prob:null},
-  {id:15, r:"Round of 32", n1:"Australia",    n2:"Egypt",       s1:null,s2:null,w:null,  date:"Jul 3 · 9:30 PM CDT",    venue:"AT&T Stadium, Dallas",                   prob:null},
+  // R32 ids 0-15  (clockwise from top, pairs feed upward into R16)
+  // Top pair → R16[0]
+  {id:0,  r:"Round of 32", n1:"South Africa", n2:"Canada",       s1:0,   s2:1,   w:2,   date:"Jun 28 · 2:00 PM CDT",  venue:"SoFi Stadium, Los Angeles",        prob:null},
+  {id:1,  r:"Round of 32", n1:"Brazil",       n2:"Japan",        s1:null,s2:null,w:null, date:"Jun 29 · 12:00 PM CDT", venue:"NRG Stadium, Houston",             prob:[57.1,25.3,17.6]},
+  // → R16[1]
+  {id:2,  r:"Round of 32", n1:"Germany",      n2:"Paraguay",     s1:null,s2:null,w:null, date:"Jun 29 · 3:30 PM CDT",  venue:"Gillette Stadium, Foxborough",     prob:[73.2,17.1,9.7]},
+  {id:3,  r:"Round of 32", n1:"Netherlands",  n2:"Morocco",      s1:null,s2:null,w:null, date:"Jun 29 · 8:00 PM CDT",  venue:"Estadio BBVA, Monterrey",          prob:[42.2,30.0,27.8]},
+  // → R16[2]
+  {id:4,  r:"Round of 32", n1:"Ivory Coast",  n2:"Norway",       s1:null,s2:null,w:null, date:"Jun 30 · 12:00 PM CDT", venue:"AT&T Stadium, Arlington",          prob:[26.0,27.1,46.9]},
+  {id:5,  r:"Round of 32", n1:"France",       n2:"Sweden",       s1:null,s2:null,w:null, date:"Jun 30 · 4:00 PM CDT",  venue:"MetLife Stadium, New Jersey",      prob:[77.0,14.4,8.6]},
+  // → R16[3]
+  {id:6,  r:"Round of 32", n1:"Mexico",       n2:"Ecuador",      s1:null,s2:null,w:null, date:"Jun 30 · 8:00 PM CDT",  venue:"Estadio Azteca, Mexico City",      prob:[42.8,31.7,25.5]},
+  {id:7,  r:"Round of 32", n1:"England",      n2:"DR Congo",     s1:null,s2:null,w:null, date:"Jul 1 · 11:00 AM CDT",  venue:"Mercedes-Benz Stadium, Atlanta",   prob:[76.2,16.2,7.6]},
+  // → R16[4]
+  {id:8,  r:"Round of 32", n1:"Belgium",      n2:"Senegal",      s1:null,s2:null,w:null, date:"Jul 1 · 3:00 PM CDT",   venue:"Lumen Field, Seattle",             prob:[44.4,29.2,26.4]},
+  {id:9,  r:"Round of 32", n1:"USA",          n2:"Bosnia & Herz.",s1:null,s2:null,w:null,date:"Jul 1 · 7:00 PM CDT",  venue:"Levi's Stadium, Santa Clara",      prob:[71.5,18.3,10.2]},
+  // → R16[5]
+  {id:10, r:"Round of 32", n1:"Spain",        n2:"Austria",      s1:null,s2:null,w:null, date:"Jul 2 · 2:00 PM CDT",   venue:"SoFi Stadium, Los Angeles",        prob:[73.9,17.3,8.8]},
+  {id:11, r:"Round of 32", n1:"Portugal",     n2:"Colombia",     s1:0,   s2:0,   w:0,   date:"Jun 27 · 6:30 PM CDT",  venue:"BMO Field, Toronto",               prob:null},
+  // → R16[6]
+  {id:12, r:"Round of 32", n1:"Switzerland",  n2:"Algeria",      s1:null,s2:null,w:null, date:"Jul 2 · 8:00 PM CDT",   venue:"BC Place, Vancouver",              prob:null},
+  {id:13, r:"Round of 32", n1:"Argentina",    n2:"Cape Verde",   s1:null,s2:null,w:null, date:"Jul 3 · 2:00 PM CDT",   venue:"Hard Rock Stadium, Miami",         prob:null},
+  // → R16[7]
+  {id:14, r:"Round of 32", n1:"Croatia",      n2:"Ghana",        s1:2,   s2:1,   w:1,   date:"Jun 27 · 4:00 PM CDT",  venue:"Arrowhead Stadium, Kansas City",   prob:null},
+  {id:15, r:"Round of 32", n1:"Australia",    n2:"Egypt",        s1:null,s2:null,w:null, date:"Jul 3 · 9:30 PM CDT",   venue:"AT&T Stadium, Dallas",             prob:null},
 
-  // R16 — ids 16-23
-  {id:16, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 4 · 1:00 PM CDT",  venue:"NRG Stadium, Houston",              prob:null},
-  {id:17, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 4 · 5:00 PM CDT",  venue:"Lincoln Financial Field, Philadelphia",prob:null},
-  {id:18, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 5 · 4:00 PM CDT",  venue:"MetLife Stadium, New Jersey",        prob:null},
-  {id:19, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 5 · 8:00 PM CDT",  venue:"Estadio Azteca, Mexico City",        prob:null},
-  {id:20, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 6 · 5:00 PM CDT",  venue:"Hard Rock Stadium, Miami",           prob:null},
-  {id:21, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 6 · 9:00 PM CDT",  venue:"Arrowhead Stadium, Kansas City",     prob:null},
-  {id:22, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 7 · 5:00 PM CDT",  venue:"Levi's Stadium, Santa Clara",        prob:null},
-  {id:23, r:"Round of 16", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 7 · 9:00 PM CDT",  venue:"AT&T Stadium, Dallas",               prob:null},
+  // R16 ids 16-23
+  {id:16,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 4 · 1:00 PM CDT", venue:"NRG Stadium, Houston",              prob:null},
+  {id:17,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 4 · 5:00 PM CDT", venue:"Lincoln Financial Field, Philadelphia",prob:null},
+  {id:18,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 5 · 4:00 PM CDT", venue:"MetLife Stadium, New Jersey",        prob:null},
+  {id:19,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 5 · 8:00 PM CDT", venue:"Estadio Azteca, Mexico City",        prob:null},
+  {id:20,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 6 · 5:00 PM CDT", venue:"Hard Rock Stadium, Miami",           prob:null},
+  {id:21,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 6 · 9:00 PM CDT", venue:"Arrowhead Stadium, Kansas City",     prob:null},
+  {id:22,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 7 · 5:00 PM CDT", venue:"Levi's Stadium, Santa Clara",        prob:null},
+  {id:23,r:"Round of 16",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 7 · 9:00 PM CDT", venue:"AT&T Stadium, Dallas",               prob:null},
 
-  // QF — ids 24-27
-  {id:24, r:"Quarter-Final", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 11 · 4:00 PM CDT", venue:"Gillette Stadium, Boston",          prob:null},
-  {id:25, r:"Quarter-Final", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 11 · 8:00 PM CDT", venue:"SoFi Stadium, Los Angeles",         prob:null},
-  {id:26, r:"Quarter-Final", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 12 · 5:00 PM CDT", venue:"Hard Rock Stadium, Miami",          prob:null},
-  {id:27, r:"Quarter-Final", n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 12 · 9:00 PM CDT", venue:"Arrowhead Stadium, Kansas City",    prob:null},
+  // QF ids 24-27
+  {id:24,r:"Quarter-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 11 · 4:00 PM CDT",venue:"Gillette Stadium, Boston",          prob:null},
+  {id:25,r:"Quarter-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 11 · 8:00 PM CDT",venue:"SoFi Stadium, Los Angeles",         prob:null},
+  {id:26,r:"Quarter-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 12 · 5:00 PM CDT",venue:"Hard Rock Stadium, Miami",          prob:null},
+  {id:27,r:"Quarter-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 12 · 9:00 PM CDT",venue:"Arrowhead Stadium, Kansas City",    prob:null},
 
-  // SF — ids 28-29
-  {id:28, r:"Semi-Final",    n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 15 · 3:00 PM CDT", venue:"AT&T Stadium, Dallas",              prob:null},
-  {id:29, r:"Semi-Final",    n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 16 · 3:00 PM CDT", venue:"Mercedes-Benz Stadium, Atlanta",    prob:null},
+  // SF ids 28-29
+  {id:28,r:"Semi-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 15 · 3:00 PM CDT",venue:"AT&T Stadium, Dallas",               prob:null},
+  {id:29,r:"Semi-Final",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 16 · 3:00 PM CDT",venue:"Mercedes-Benz Stadium, Atlanta",     prob:null},
 
-  // FINAL — id 30
-  {id:30, r:"🏆 FINAL",      n1:"TBD",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 19 · 3:00 PM CDT", venue:"MetLife Stadium, New Jersey",       prob:null},
+  // Final id 30
+  {id:30,r:"🏆 FINAL",n1:"TBD",n2:"TBD",s1:null,s2:null,w:null,date:"Jul 19 · 3:00 PM CDT",venue:"MetLife Stadium, New Jersey",         prob:null},
 ];
 
-// Auto-propagate winners into later rounds
-// R32 winner feeds R16 slot: pairs (0,1)→16, (2,3)→17, (4,5)→18, (6,7)→19,
-//                              (8,9)→20, (10,11)→21, (12,13)→22, (14,15)→23
-function getWinnerName(m) {
+function getWinner(m) {
   if (m.w === 1) return m.n1;
   if (m.w === 2) return m.n2;
-  if (m.w === 0) return 'Draw'; // draw (penalty round handled manually)
   return 'TBD';
 }
 
 function propagate() {
-  // R32 → R16
   for (let i = 0; i < 8; i++) {
-    const mA = M[i*2], mB = M[i*2+1];
-    const r16 = M[16+i];
-    const wA = getWinnerName(mA), wB = getWinnerName(mB);
-    r16.n1 = (wA !== 'TBD' && wA !== 'Draw') ? wA : 'TBD';
-    r16.n2 = (wB !== 'TBD' && wB !== 'Draw') ? wB : 'TBD';
+    M[16+i].n1 = getWinner(M[i*2]);
+    M[16+i].n2 = getWinner(M[i*2+1]);
   }
-  // R16 → QF
   for (let i = 0; i < 4; i++) {
-    const mA = M[16+i*2], mB = M[16+i*2+1];
-    const qf = M[24+i];
-    qf.n1 = getWinnerName(mA) !== 'TBD' && getWinnerName(mA) !== 'Draw' ? getWinnerName(mA) : 'TBD';
-    qf.n2 = getWinnerName(mB) !== 'TBD' && getWinnerName(mB) !== 'Draw' ? getWinnerName(mB) : 'TBD';
+    M[24+i].n1 = getWinner(M[16+i*2]);
+    M[24+i].n2 = getWinner(M[16+i*2+1]);
   }
-  // QF → SF
   for (let i = 0; i < 2; i++) {
-    const mA = M[24+i*2], mB = M[24+i*2+1];
-    const sf = M[28+i];
-    sf.n1 = getWinnerName(mA) !== 'TBD' && getWinnerName(mA) !== 'Draw' ? getWinnerName(mA) : 'TBD';
-    sf.n2 = getWinnerName(mB) !== 'TBD' && getWinnerName(mB) !== 'Draw' ? getWinnerName(mB) : 'TBD';
+    M[28+i].n1 = getWinner(M[24+i*2]);
+    M[28+i].n2 = getWinner(M[24+i*2+1]);
   }
-  // SF → Final
-  const sfA = M[28], sfB = M[29];
-  M[30].n1 = getWinnerName(sfA) !== 'TBD' && getWinnerName(sfA) !== 'Draw' ? getWinnerName(sfA) : 'TBD';
-  M[30].n2 = getWinnerName(sfB) !== 'TBD' && getWinnerName(sfB) !== 'Draw' ? getWinnerName(sfB) : 'TBD';
+  M[30].n1 = getWinner(M[28]);
+  M[30].n2 = getWinner(M[29]);
 }
-
 propagate();
 
 // ── LAYOUT ─────────────────────────────────────────────
-const scene = document.getElementById('scene');
-const svg   = document.getElementById('linesSvg');
+const scene  = document.getElementById('scene');
+const svgEl  = document.getElementById('linesSvg');
 
-const RADII = { r32:0.86, r16:0.63, qf:0.42, sf:0.24 };
+// Radii as fraction of half-width
+const RADII = { r32: 0.86, r16: 0.63, qf: 0.42, sf: 0.24 };
 
+// 16 R32 slots. Slot 0 = top-center, going clockwise.
+// We space them evenly: 360/16 = 22.5° apart.
+// To get slot 0 at exactly 12 o'clock we offset by -90° in polar().
 function polar(frac, angleDeg) {
   const size = scene.offsetWidth;
-  const cx = size/2, cy = size/2;
-  const r  = frac * cx;
+  const cx = size / 2, cy = size / 2;
+  const r = frac * cx;
+  // angleDeg=0 → top (12 o'clock); increases clockwise
   const rad = (angleDeg - 90) * Math.PI / 180;
-  return { x: cx + r*Math.cos(rad), y: cy + r*Math.sin(rad) };
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-function matchAngle(i) { return i * (360/16); }
+// Angle for R32 slot i (0 = top, clockwise)
+// 16 slots, 22.5° each. Slot 0 centered at 0°.
+function r32Angle(i) { return i * (360 / 16); }
+
+// R16 slot i: midpoint angle between its two R32 feeders
+function r16Angle(i) { return r32Angle(i * 2) + (360 / 16) / 2; }
+
+// QF slot i: midpoint of its 4 R32 slots
+function qfAngle(i)  { return r32Angle(i * 4) + (360 / 16); }
+
+// SF slot i: midpoint of its 8 R32 slots
+function sfAngle(i)  { return r32Angle(i * 8) + (360 / 16) * 2; }
 
 function statusCls(m) {
-  if (m.w !== null && m.w !== 0)              return 's-winner';
-  if (m.s1 !== null && m.w !== null)          return 's-done';
-  if (m.s1 !== null)                          return 's-done';
-  if (m.n1 === 'TBD' && m.n2 === 'TBD')      return 's-tbd';
+  if (m.w !== null && m.w !== 0) return 's-winner';
+  if (m.s1 !== null)              return 's-done';
+  if (m.n1 === 'TBD' && m.n2 === 'TBD') return 's-tbd';
   return 's-upcoming';
 }
 
 function makeFlagPair(m, sizeClass) {
-  const isTBD = m.n1==='TBD' && m.n2==='TBD';
-  const sc = statusCls(m);
+  const isTBD = m.n1 === 'TBD' && m.n2 === 'TBD';
   const wrapper = document.createElement('div');
-  wrapper.className = `match-node ${sizeClass} ${sc}`;
+  wrapper.className = `match-node ${sizeClass} ${statusCls(m)}`;
   wrapper.onclick = () => openModal(m.id);
 
   const pair = document.createElement('div');
   pair.className = 'flags-pair';
 
   if (isTBD) {
-    pair.innerHTML = `<span style="padding:0 10px;font-size:0.6rem;color:#333;white-space:nowrap">TBD</span>`;
+    pair.innerHTML = `<span style="padding:0 10px;font-size:0.55rem;color:#333;white-space:nowrap">TBD</span>`;
   } else {
-    const img1 = document.createElement('img');
-    img1.className = 'flag-img';
-    img1.src = flagUrl(m.n1);
-    img1.alt = m.n1;
-
-    const divider = document.createElement('div');
-    divider.className = 'flag-divider';
-
-    const img2 = document.createElement('img');
-    img2.className = 'flag-img';
-    img2.src = flagUrl(m.n2);
-    img2.alt = m.n2;
-
-    pair.appendChild(img1);
-    pair.appendChild(divider);
-    pair.appendChild(img2);
+    const i1 = document.createElement('img');
+    i1.className = 'flag-img'; i1.src = flagUrl(m.n1); i1.alt = m.n1;
+    const dv = document.createElement('div'); dv.className = 'flag-divider';
+    const i2 = document.createElement('img');
+    i2.className = 'flag-img'; i2.src = flagUrl(m.n2); i2.alt = m.n2;
+    pair.appendChild(i1); pair.appendChild(dv); pair.appendChild(i2);
   }
   wrapper.appendChild(pair);
 
@@ -486,12 +479,11 @@ function makeFlagPair(m, sizeClass) {
     lbl.textContent = `${m.s1} – ${m.s2}`;
   } else if (!isTBD) {
     lbl.className = 'match-label';
-    const short1 = m.n1.length>8 ? m.n1.slice(0,7)+'…' : m.n1;
-    const short2 = m.n2.length>8 ? m.n2.slice(0,7)+'…' : m.n2;
-    lbl.textContent = `${short1} vs ${short2}`;
+    const s1 = m.n1.length > 8 ? m.n1.slice(0,7)+'…' : m.n1;
+    const s2 = m.n2.length > 8 ? m.n2.slice(0,7)+'…' : m.n2;
+    lbl.textContent = `${s1} vs ${s2}`;
   }
   wrapper.appendChild(lbl);
-
   return wrapper;
 }
 
@@ -500,95 +492,131 @@ function placeAt(el, x, y) {
   el.style.top  = y + 'px';
 }
 
-function svgCurve(x1,y1,x2,y2,color='#222',w=1.2) {
-  const size=scene.offsetWidth, cx=size/2, cy=size/2;
-  const mx=(x1+x2)/2, my=(y1+y2)/2;
-  const cpx=cx+(mx-cx)*0.6, cpy=cy+(my-cy)*0.6;
-  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-  p.setAttribute('d',`M${x1},${y1} Q${cpx},${cpy} ${x2},${y2}`);
-  p.setAttribute('stroke',color);
-  p.setAttribute('stroke-width',w);
-  p.setAttribute('fill','none');
-  svg.appendChild(p);
+function svgNS() { return 'http://www.w3.org/2000/svg'; }
+
+// Straight line between two points
+function drawLine(x1, y1, x2, y2, color = '#2a2a2a', w = 1.2) {
+  const l = document.createElementNS(svgNS(), 'line');
+  l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+  l.setAttribute('stroke', color);
+  l.setAttribute('stroke-width', w);
+  l.setAttribute('stroke-linecap', 'round');
+  svgEl.appendChild(l);
+}
+
+// Small dot at a junction point
+function drawDot(x, y, r = 2.5, color = '#3a3020') {
+  const c = document.createElementNS(svgNS(), 'circle');
+  c.setAttribute('cx', x); c.setAttribute('cy', y);
+  c.setAttribute('r', r);
+  c.setAttribute('fill', color);
+  svgEl.appendChild(c);
 }
 
 function build() {
-  scene.querySelectorAll('.match-node,.trophy-node').forEach(e=>e.remove());
-  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  scene.querySelectorAll('.match-node,.trophy-node').forEach(e => e.remove());
+  while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
 
-  const size=scene.offsetWidth, cx=size/2, cy=size/2;
-  const r32pts=[], r16pts=[], qfpts=[], sfpts=[];
+  const size = scene.offsetWidth;
+  const cx = size / 2, cy = size / 2;
 
-  for(let i=0;i<16;i++){
-    const ang = matchAngle(i);
-    const p   = polar(RADII.r32, ang);
-    r32pts.push(p);
-    const el = makeFlagPair(M[i], 'sz-r32');
-    placeAt(el, p.x, p.y);
-    scene.appendChild(el);
+  // Compute all positions
+  const r32pts = [], r16pts = [], qfpts = [], sfpts = [];
+  for (let i = 0; i < 16; i++) r32pts.push(polar(RADII.r32, r32Angle(i)));
+  for (let i = 0; i < 8;  i++) r16pts.push(polar(RADII.r16, r16Angle(i)));
+  for (let i = 0; i < 4;  i++) qfpts.push(polar(RADII.qf,  qfAngle(i)));
+  for (let i = 0; i < 2;  i++) sfpts.push(polar(RADII.sf,  sfAngle(i)));
+
+  // ── Draw lines first (behind nodes) ──
+
+  // R32 → midpoint on the way to R16 → R16
+  for (let i = 0; i < 8; i++) {
+    const pA  = r32pts[i*2];
+    const pB  = r32pts[i*2+1];
+    const r16 = r16pts[i];
+
+    // Each R32 goes straight to the R16 node
+    drawLine(pA.x, pA.y, r16.x, r16.y, '#282828', 1.1);
+    drawLine(pB.x, pB.y, r16.x, r16.y, '#282828', 1.1);
+    drawDot(r16.x, r16.y, 2.5, '#4a3a10');
   }
 
-  for(let i=0;i<8;i++){
-    const angA = matchAngle(i*2);
-    const angB = matchAngle(i*2+1);
-    const midAng = (angA+angB)/2;
-    const p = polar(RADII.r16, midAng);
-    r16pts.push(p);
-    svgCurve(r32pts[i*2].x,   r32pts[i*2].y,   p.x, p.y);
-    svgCurve(r32pts[i*2+1].x, r32pts[i*2+1].y, p.x, p.y);
-    const el = makeFlagPair(M[16+i], 'sz-r16');
-    placeAt(el, p.x, p.y);
-    scene.appendChild(el);
+  // R16 → QF
+  for (let i = 0; i < 4; i++) {
+    const pA = r16pts[i*2];
+    const pB = r16pts[i*2+1];
+    const qf = qfpts[i];
+    drawLine(pA.x, pA.y, qf.x, qf.y, '#282828', 1.1);
+    drawLine(pB.x, pB.y, qf.x, qf.y, '#282828', 1.1);
+    drawDot(qf.x, qf.y, 2.5, '#4a3a10');
   }
 
-  for(let i=0;i<4;i++){
-    const angs=[0,1,2,3].map(j=>matchAngle(i*4+j));
-    const midAng=angs.reduce((a,b)=>a+b,0)/4;
-    const p=polar(RADII.qf, midAng);
-    qfpts.push(p);
-    svgCurve(r16pts[i*2].x,   r16pts[i*2].y,   p.x, p.y);
-    svgCurve(r16pts[i*2+1].x, r16pts[i*2+1].y, p.x, p.y);
-    const el=makeFlagPair(M[24+i], 'sz-qf');
-    placeAt(el, p.x, p.y);
-    scene.appendChild(el);
+  // QF → SF
+  for (let i = 0; i < 2; i++) {
+    const pA = qfpts[i*2];
+    const pB = qfpts[i*2+1];
+    const sf = sfpts[i];
+    drawLine(pA.x, pA.y, sf.x, sf.y, '#2a2a20', 1.3);
+    drawLine(pB.x, pB.y, sf.x, sf.y, '#2a2a20', 1.3);
+    drawDot(sf.x, sf.y, 3, '#5a4a18');
   }
 
-  for(let i=0;i<2;i++){
-    const angs=[0,1,2,3,4,5,6,7].map(j=>matchAngle(i*8+j));
-    const midAng=angs.reduce((a,b)=>a+b,0)/8;
-    const p=polar(RADII.sf, midAng);
-    sfpts.push(p);
-    svgCurve(qfpts[i*2].x,   qfpts[i*2].y,   p.x, p.y);
-    svgCurve(qfpts[i*2+1].x, qfpts[i*2+1].y, p.x, p.y);
-    const el=makeFlagPair(M[28+i], 'sz-sf');
-    placeAt(el, p.x, p.y);
-    scene.appendChild(el);
-  }
-
-  sfpts.forEach(p=>{
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1',p.x); l.setAttribute('y1',p.y);
-    l.setAttribute('x2',cx);  l.setAttribute('y2',cy);
-    l.setAttribute('stroke','#3a2e10');
-    l.setAttribute('stroke-width','1.5');
-    svg.appendChild(l);
+  // SF → center
+  sfpts.forEach(p => {
+    drawLine(p.x, p.y, cx, cy, '#3a2e10', 1.5);
   });
 
-  const trophy=document.createElement('div');
-  trophy.className='trophy-node';
-  trophy.style.left=cx+'px';
-  trophy.style.top=cy+'px';
-  trophy.innerHTML='<div class="trophy-circle">🏆</div>';
-  trophy.onclick=()=>openModal(30);
+  // ── Place R32 nodes ──
+  for (let i = 0; i < 16; i++) {
+    const el = makeFlagPair(M[i], 'sz-r32');
+    placeAt(el, r32pts[i].x, r32pts[i].y);
+    scene.appendChild(el);
+  }
+
+  // ── Place R16 nodes ──
+  for (let i = 0; i < 8; i++) {
+    const el = makeFlagPair(M[16+i], 'sz-r16');
+    placeAt(el, r16pts[i].x, r16pts[i].y);
+    scene.appendChild(el);
+  }
+
+  // ── Place QF nodes ──
+  for (let i = 0; i < 4; i++) {
+    const el = makeFlagPair(M[24+i], 'sz-qf');
+    placeAt(el, qfpts[i].x, qfpts[i].y);
+    scene.appendChild(el);
+  }
+
+  // ── Place SF nodes ──
+  for (let i = 0; i < 2; i++) {
+    const el = makeFlagPair(M[28+i], 'sz-sf');
+    placeAt(el, sfpts[i].x, sfpts[i].y);
+    scene.appendChild(el);
+  }
+
+  // ── Trophy at center ──
+  const trophy = document.createElement('div');
+  trophy.className = 'trophy-node';
+  trophy.style.left = cx + 'px';
+  trophy.style.top  = cy + 'px';
+  trophy.innerHTML = `<div class="trophy-circle">
+    <img class="trophy-img"
+      src="https://upload.wikimedia.org/wikipedia/en/thumb/e/ec/FIFA_World_Cup_Trophy.svg/240px-FIFA_World_Cup_Trophy.svg.png"
+      alt="World Cup Trophy"
+      onerror="this.parentElement.innerHTML='🏆'"
+    />
+  </div>`;
+  trophy.onclick = () => openModal(30);
   scene.appendChild(trophy);
 }
 
 let rTimer;
-window.addEventListener('resize',()=>{ clearTimeout(rTimer); rTimer=setTimeout(build,120); });
+window.addEventListener('resize', () => { clearTimeout(rTimer); rTimer = setTimeout(build, 120); });
 document.fonts.ready.then(build);
 
 // ── MODAL ───────────────────────────────────────────────
-function openModal(id){
+function openModal(id) {
   const m = M[id];
   document.getElementById('mRound').textContent = m.r;
   document.getElementById('mImg1').src = flagUrl(m.n1, 80, 60);
@@ -599,23 +627,15 @@ function openModal(id){
   document.getElementById('mN2').className = 'modal-tname' + (m.w===2?' w':'');
 
   const hasScore = m.s1 !== null;
-  if (hasScore) {
-    document.getElementById('mScore').textContent = `${m.s1} — ${m.s2}`;
-  } else {
-    document.getElementById('mScore').textContent = '– vs –';
-  }
-
-  document.getElementById('mDate').textContent = m.date;
+  document.getElementById('mScore').textContent = hasScore ? `${m.s1} — ${m.s2}` : '– vs –';
+  document.getElementById('mDate').textContent  = m.date;
   document.getElementById('mVenue').textContent = m.venue;
 
-  const badge = document.getElementById('mBadge');
+  const badge    = document.getElementById('mBadge');
   const probWrap = document.getElementById('mProbWrap');
-  const probLabel = document.getElementById('mProbLabel');
-  const probBar = document.getElementById('mProbBar');
 
   if (hasScore) {
-    const isDrawResult = m.w === 0;
-    badge.textContent = isDrawResult ? 'Draw (AET/Pen TBD)' : 'Full Time';
+    badge.textContent = m.w === 0 ? 'Draw (AET/Pen TBD)' : 'Full Time';
     badge.className = 'badge b-done';
     probWrap.style.display = 'none';
   } else if (m.n1 === 'TBD') {
@@ -625,27 +645,25 @@ function openModal(id){
   } else {
     badge.textContent = 'Upcoming';
     badge.className = 'badge b-upcoming';
-
     if (m.prob) {
       const [p1, pd, p2] = m.prob;
-      probLabel.textContent = `Win probability: ${m.n1} ${p1}%  ·  Draw ${pd}%  ·  ${m.n2} ${p2}%`;
-      probBar.innerHTML = `
-        <div class="prob-seg" style="flex:${p1};background:#4a7fd4;opacity:0.8"></div>
-        <div class="prob-seg" style="flex:${pd};background:#555;opacity:0.8"></div>
-        <div class="prob-seg" style="flex:${p2};background:#c9a84c;opacity:0.8"></div>
-      `;
+      document.getElementById('mProbLabel').textContent =
+        `Win probability: ${m.n1} ${p1}%  ·  Draw ${pd}%  ·  ${m.n2} ${p2}%`;
+      document.getElementById('mProbBar').innerHTML = `
+        <div class="prob-seg" style="flex:${p1};background:#4a7fd4;opacity:.85"></div>
+        <div class="prob-seg" style="flex:${pd};background:#555;opacity:.85"></div>
+        <div class="prob-seg" style="flex:${p2};background:#c9a84c;opacity:.85"></div>`;
       probWrap.style.display = 'block';
     } else {
       probWrap.style.display = 'none';
     }
   }
-
   document.getElementById('overlay').classList.add('open');
 }
 
-function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
-document.getElementById('overlay').addEventListener('click',e=>{
-  if(e.target===e.currentTarget) closeModal();
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
 });
 </script>
 </body>
