@@ -1,501 +1,790 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>World Cup 2026 Bracket</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>World Cup 2026 — Bracket</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
 
-    body {
-      background: #0a0a0a;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-    }
+  :root {
+    --gold: #c9a84c;
+    --gold-dim: #7a6030;
+    --bg: #0c0c0c;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --live: #e03c3c;
+    --done: #4caf50;
+    --upcoming: #5b8dee;
+  }
 
-    h1 {
-      font-size: 2rem;
-      color: #d4a017;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-    .subtitle {
-      color: #666;
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      margin-bottom: 40px;
-    }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-    /* ── BRACKET GRID ── */
-    .bracket-wrapper {
-      width: 100%;
-      max-width: 1400px;
-      overflow-x: auto;
-    }
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 36px 20px 20px;
+    position: relative;
+    z-index: 2;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 6px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  header p {
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
 
-    .bracket {
-      display: flex;
-      gap: 0;
-      align-items: stretch;
-      min-width: 900px;
-    }
+  /* CIRCULAR BRACKET CANVAS */
+  #bracketCanvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 900px;
+    width: 100%;
+    cursor: default;
+  }
 
-    .round {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      flex: 1;
-      padding: 0 6px;
-    }
+  /* LEGEND */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 12px 20px 30px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
 
-    .round-label {
-      text-align: center;
-      font-size: 0.65rem;
-      letter-spacing: 2px;
-      color: #d4a017;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #222;
-    }
+  /* MODAL */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
 
-    /* ── MATCH CARD ── */
-    .match {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin: 4px 0;
-      position: relative;
-    }
+  .modal {
+    background: #111;
+    border: 1px solid var(--gold-dim);
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 0 60px rgba(201,168,76,0.12);
+  }
 
-    .team {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 6px;
-      padding: 7px 10px;
-      cursor: pointer;
-      transition: all 0.2s;
-      min-width: 140px;
-      position: relative;
-    }
+  .modal-close {
+    position: absolute; top: 14px; right: 18px;
+    background: none; border: none;
+    color: var(--muted); font-size: 1.1rem; cursor: pointer;
+    transition: color .15s;
+  }
+  .modal-close:hover { color: #fff; }
 
-    .team:hover {
-      border-color: #d4a017;
-      background: #222;
-    }
+  .modal-round {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
 
-    .team.winner {
-      border-color: #d4a017;
-      background: #1e1a0e;
-    }
+  .modal-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    gap: 8px;
+  }
 
-    .team.tbd {
-      opacity: 0.4;
-      cursor: default;
-    }
+  .modal-team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .modal-flag { font-size: 2.8rem; line-height: 1; }
+  .modal-tname {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+  .modal-tname.winner-name { color: var(--gold); }
 
-    .team-flag {
-      font-size: 1.3rem;
-      min-width: 24px;
-      text-align: center;
-    }
+  .modal-score-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px;
+  }
+  .modal-scoreline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.6rem;
+    letter-spacing: 4px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .modal-vs {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
 
-    .team-name {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+  hr.mdiv { border: none; border-top: 1px solid #1e1e1e; margin: 18px 0; }
 
-    .team-score {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #d4a017;
-      min-width: 16px;
-      text-align: right;
-    }
+  .modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: #aaa;
+  }
+  .info-icon { font-size: 1rem; min-width: 18px; }
+  .info-label {
+    display: block;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
 
-    /* ── CONNECTOR LINES ── */
-    .match-connector {
-      position: absolute;
-      right: -6px;
-      top: 50%;
-      width: 6px;
-      height: 1px;
-      background: #333;
-    }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+  .badge-done     { background:#0d1f0d; color:var(--done);     border:1px solid var(--done); }
+  .badge-live     { background:#1f0d0d; color:var(--live);     border:1px solid var(--live); animation: blink 1s infinite; }
+  .badge-upcoming { background:#0d1020; color:var(--upcoming); border:1px solid var(--upcoming); }
+  .badge-tbd      { background:#151515; color:var(--muted);    border:1px solid #333; }
 
-    /* ── CENTER TROPHY ── */
-    .trophy-center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0 20px;
-      min-width: 120px;
-    }
-
-    .trophy-icon {
-      font-size: 3.5rem;
-      filter: drop-shadow(0 0 20px #d4a01788);
-    }
-
-    .trophy-label {
-      font-size: 0.6rem;
-      letter-spacing: 3px;
-      color: #d4a017;
-      margin-top: 8px;
-      text-transform: uppercase;
-    }
-
-    /* ── POPUP MODAL ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal {
-      background: #141414;
-      border: 1px solid #d4a017;
-      border-radius: 12px;
-      padding: 28px;
-      max-width: 380px;
-      width: 90%;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      background: none;
-      border: none;
-      color: #888;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .modal-close:hover { color: #fff; }
-
-    .modal-round {
-      font-size: 0.65rem;
-      letter-spacing: 2px;
-      color: #d4a017;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .modal-teams {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .modal-team {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      flex: 1;
-    }
-
-    .modal-flag { font-size: 2.5rem; }
-
-    .modal-name {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: 0.5px;
-    }
-
-    .modal-score-box {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 16px;
-    }
-
-    .modal-score {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #d4a017;
-      min-width: 30px;
-      text-align: center;
-    }
-
-    .modal-vs {
-      font-size: 0.75rem;
-      color: #555;
-      letter-spacing: 1px;
-    }
-
-    .modal-divider {
-      border: none;
-      border-top: 1px solid #222;
-      margin: 16px 0;
-    }
-
-    .modal-info-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-
-    .modal-info-icon { font-size: 1rem; min-width: 20px; }
-
-    .modal-info-label {
-      font-size: 0.65rem;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .modal-status {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.65rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-top: 14px;
-    }
-
-    .status-finished { background: #1a2e1a; color: #4caf50; border: 1px solid #4caf50; }
-    .status-live     { background: #2e1a1a; color: #f44336; border: 1px solid #f44336; animation: pulse 1s infinite; }
-    .status-upcoming { background: #1a1a2e; color: #64b5f6; border: 1px solid #64b5f6; }
-    .status-tbd      { background: #1e1e1e; color: #555;    border: 1px solid #333; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.5; }
-    }
-
-  </style>
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+</style>
 </head>
 <body>
 
+<header>
   <h1>World Cup 2026</h1>
-  <p class="subtitle">INTERACTIVE BRACKET — CLICK ANY MATCH</p>
+  <p>Interactive Bracket — Click any match</p>
+</header>
 
-  <div class="bracket-wrapper">
-    <div class="bracket" id="bracket"></div>
-  </div>
+<canvas id="bracketCanvas"></canvas>
 
-  <!-- POPUP MODAL -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-      <div class="modal-round" id="modalRound"></div>
-      <div class="modal-teams">
-        <div class="modal-team">
-          <div class="modal-flag" id="modalFlag1"></div>
-          <div class="modal-name" id="modalName1"></div>
-        </div>
-        <div class="modal-score-box">
-          <div class="modal-score" id="modalScore1"></div>
-          <div class="modal-vs">VS</div>
-          <div class="modal-score" id="modalScore2"></div>
-        </div>
-        <div class="modal-team">
-          <div class="modal-flag" id="modalFlag2"></div>
-          <div class="modal-name" id="modalName2"></div>
-        </div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#4caf50"></div>Full Time</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e03c3c"></div>Live</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5b8dee"></div>Upcoming</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#444"></div>TBD</div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-round" id="mRound"></div>
+    <div class="modal-teams">
+      <div class="modal-team">
+        <div class="modal-flag" id="mFlag1"></div>
+        <div class="modal-tname" id="mName1"></div>
       </div>
-      <hr class="modal-divider"/>
-      <div class="modal-info-row">
-        <div class="modal-info-icon">📅</div>
-        <div>
-          <span class="modal-info-label">Date & Time</span>
-          <span id="modalDate"></span>
-        </div>
+      <div class="modal-score-wrap">
+        <div class="modal-scoreline" id="mScore"></div>
+        <div class="modal-vs">VS</div>
       </div>
-      <div class="modal-info-row">
-        <div class="modal-info-icon">📍</div>
-        <div>
-          <span class="modal-info-label">Venue</span>
-          <span id="modalVenue"></span>
-        </div>
-      </div>
-      <div style="text-align:center;">
-        <span class="modal-status" id="modalStatus"></span>
+      <div class="modal-team">
+        <div class="modal-flag" id="mFlag2"></div>
+        <div class="modal-tname" id="mName2"></div>
       </div>
     </div>
+    <hr class="mdiv"/>
+    <div class="modal-info">
+      <div class="modal-info-row">
+        <div class="info-icon">📅</div>
+        <div><span class="info-label">Date & Time</span><span id="mDate"></span></div>
+      </div>
+      <div class="modal-info-row">
+        <div class="info-icon">📍</div>
+        <div><span class="info-label">Venue</span><span id="mVenue"></span></div>
+      </div>
+    </div>
+    <div style="text-align:center"><span class="badge" id="mBadge"></span></div>
   </div>
+</div>
 
-  <script>
-    // ── MATCH DATA ──────────────────────────────────────────────
-    // This is where all match info lives. Update scores here as
-    // the tournament progresses. score: null = not played yet.
-    const matches = {
-      // ROUND OF 32 (left side)
-      r32_1:  { team1: {name:"USA",       flag:"🇺🇸"}, team2: {name:"Bosnia",    flag:"🇧🇦"}, score1: null, score2: null, date:"Jun 22, 2026 · 3:00 PM ET",  venue:"MetLife Stadium, New Jersey",    round:"Round of 32", winner: null },
-      r32_2:  { team1: {name:"Morocco",   flag:"🇲🇦"}, team2: {name:"Netherlands",flag:"🇳🇱"}, score1: null, score2: null, date:"Jun 22, 2026 · 6:00 PM ET",  venue:"SoFi Stadium, Los Angeles",      round:"Round of 32", winner: null },
-      r32_3:  { team1: {name:"Portugal",  flag:"🇵🇹"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
-      r32_4:  { team1: {name:"Croatia",   flag:"🇭🇷"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
-      r32_5:  { team1: {name:"Spain",     flag:"🇪🇸"}, team2: {name:"Austria",   flag:"🇦🇹"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
-      r32_6:  { team1: {name:"Canada",    flag:"🇨🇦"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
-      r32_7:  { team1: {name:"Sweden",    flag:"🇸🇪"}, team2: {name:"France",    flag:"🇫🇷"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
-      r32_8:  { team1: {name:"Germany",   flag:"🇩🇪"}, team2: {name:"Brazil",    flag:"🇧🇷"}, score1: null, score2: null, date:"TBD",                          venue:"TBD",                            round:"Round of 32", winner: null },
+<script>
+// ═══════════════════════════════════════════════════════
+//  MATCH DATA  (update scores as tournament progresses)
+//  winner: 1 = team1 won, 2 = team2 won, null = not played
+// ═══════════════════════════════════════════════════════
+const MATCHES = [
+  // ── ROUND OF 32 ─────────────────────────────────────
+  { id:0,  round:"Round of 32",
+    t1:"🇨🇦", n1:"Canada",       t2:"🇿🇦", n2:"South Africa",
+    s1:1, s2:0, winner:1,
+    date:"Jun 28, 2026 · 3:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
 
-      // ROUND OF 32 (right side)
-      r32_9:  { team1: {name:"Japan",     flag:"🇯🇵"}, team2: {name:"Ireland",   flag:"🇮🇪"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_10: { team1: {name:"Norway",    flag:"🇳🇴"}, team2: {name:"Mexico",    flag:"🇲🇽"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_11: { team1: {name:"Ecuador",   flag:"🇪🇨"}, team2: {name:"England",   flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_12: { team1: {name:"DR Congo",  flag:"🇨🇩"}, team2: {name:"TBD",       flag:"❓"},  score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_13: { team1: {name:"Argentina", flag:"🇦🇷"}, team2: {name:"Cape Verde", flag:"🇨🇻"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_14: { team1: {name:"Australia", flag:"🇦🇺"}, team2: {name:"Egypt",     flag:"🇪🇬"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_15: { team1: {name:"Algeria",   flag:"🇩🇿"}, team2: {name:"Switzerland",flag:"🇨🇭"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
-      r32_16: { team1: {name:"Belgium",   flag:"🇧🇪"}, team2: {name:"Senegal",   flag:"🇸🇳"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 32", winner: null },
+  { id:1,  round:"Round of 32",
+    t1:"🇧🇷", n1:"Brazil",        t2:"🇯🇵", n2:"Japan",
+    s1:null, s2:null, winner:null,
+    date:"Jun 29, 2026 · 1:00 PM ET", venue:"NRG Stadium, Houston" },
 
-      // ROUND OF 16
-      r16_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_3: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_4: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_5: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_6: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_7: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
-      r16_8: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Round of 16", winner: null },
+  { id:2,  round:"Round of 32",
+    t1:"🇩🇪", n1:"Germany",       t2:"🇵🇾", n2:"Paraguay",
+    s1:null, s2:null, winner:null,
+    date:"Jun 29, 2026 · 4:30 PM ET", venue:"Gillette Stadium, Foxborough" },
 
-      // QUARTERS
-      qf_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
-      qf_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
-      qf_3: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
-      qf_4: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Quarter-Final", winner: null },
+  { id:3,  round:"Round of 32",
+    t1:"🇳🇱", n1:"Netherlands",   t2:"🇲🇦", n2:"Morocco",
+    s1:null, s2:null, winner:null,
+    date:"Jun 29, 2026 · 9:00 PM ET", venue:"Estadio BBVA, Monterrey" },
 
-      // SEMIS
-      sf_1: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Semi-Final", winner: null },
-      sf_2: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"TBD", venue:"TBD", round:"Semi-Final", winner: null },
+  { id:4,  round:"Round of 32",
+    t1:"🇨🇮", n1:"Ivory Coast",   t2:"🇳🇴", n2:"Norway",
+    s1:null, s2:null, winner:null,
+    date:"Jun 30, 2026 · 1:00 PM ET", venue:"AT&T Stadium, Arlington" },
 
-      // FINAL
-      final: { team1: {name:"TBD", flag:"❓"}, team2: {name:"TBD", flag:"❓"}, score1: null, score2: null, date:"Jul 19, 2026", venue:"MetLife Stadium, New Jersey", round:"FINAL", winner: null },
-    };
+  { id:5,  round:"Round of 32",
+    t1:"🇫🇷", n1:"France",        t2:"🇸🇪", n2:"Sweden",
+    s1:null, s2:null, winner:null,
+    date:"Jun 30, 2026 · 5:00 PM ET", venue:"MetLife Stadium, New Jersey" },
 
-    // ── BRACKET STRUCTURE ────────────────────────────────────────
-    const structure = [
-      { label: "Round of 32", matches: ["r32_1","r32_2","r32_3","r32_4","r32_5","r32_6","r32_7","r32_8"] },
-      { label: "Round of 16", matches: ["r16_1","r16_2","r16_3","r16_4"] },
-      { label: "Quarter-Finals", matches: ["qf_1","qf_2"] },
-      { label: "Semi-Finals", matches: ["sf_1"] },
-      { label: "🏆 FINAL", matches: ["final"] },
-      { label: "Semi-Finals", matches: ["sf_2"] },
-      { label: "Quarter-Finals", matches: ["qf_3","qf_4"] },
-      { label: "Round of 16", matches: ["r16_5","r16_6","r16_7","r16_8"] },
-      { label: "Round of 32", matches: ["r32_9","r32_10","r32_11","r32_12","r32_13","r32_14","r32_15","r32_16"] },
-    ];
+  { id:6,  round:"Round of 32",
+    t1:"🇲🇽", n1:"Mexico",        t2:"🇪🇨", n2:"Ecuador",
+    s1:null, s2:null, winner:null,
+    date:"Jun 30, 2026 · 9:00 PM ET", venue:"Estadio Azteca, Mexico City" },
 
-    // ── RENDER BRACKET ───────────────────────────────────────────
-    function buildTeamEl(teamData, score, isWinner, matchId, teamNum) {
-      const div = document.createElement('div');
-      div.className = 'team' + (isWinner ? ' winner' : '') + (teamData.name === 'TBD' ? ' tbd' : '');
-      div.innerHTML = `
-        <span class="team-flag">${teamData.flag}</span>
-        <span class="team-name">${teamData.name}</span>
-        <span class="team-score">${score !== null ? score : ''}</span>
-      `;
-      if (teamData.name !== 'TBD') {
-        div.onclick = () => openModal(matchId);
+  { id:7,  round:"Round of 32",
+    t1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", n1:"England",      t2:"🇨🇩", n2:"DR Congo",
+    s1:null, s2:null, winner:null,
+    date:"Jul 1, 2026 · 12:00 PM ET", venue:"Mercedes-Benz Stadium, Atlanta" },
+
+  { id:8,  round:"Round of 32",
+    t1:"🇧🇪", n1:"Belgium",       t2:"🇸🇳", n2:"Senegal",
+    s1:null, s2:null, winner:null,
+    date:"Jul 1, 2026 · 4:00 PM ET", venue:"Lumen Field, Seattle" },
+
+  { id:9,  round:"Round of 32",
+    t1:"🇺🇸", n1:"USA",           t2:"🇧🇦", n2:"Bosnia & Herz.",
+    s1:null, s2:null, winner:null,
+    date:"Jul 1, 2026 · 8:00 PM ET", venue:"Levi's Stadium, Santa Clara" },
+
+  { id:10, round:"Round of 32",
+    t1:"🇪🇸", n1:"Spain",         t2:"🇦🇹", n2:"Austria",
+    s1:null, s2:null, winner:null,
+    date:"Jul 2, 2026 · 3:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
+
+  { id:11, round:"Round of 32",
+    t1:"🇵🇹", n1:"Portugal",      t2:"🇭🇷", n2:"Croatia",
+    s1:null, s2:null, winner:null,
+    date:"Jul 2, 2026 · 7:00 PM ET", venue:"BMO Field, Toronto" },
+
+  { id:12, round:"Round of 32",
+    t1:"🇨🇭", n1:"Switzerland",   t2:"🇩🇿", n2:"Algeria",
+    s1:null, s2:null, winner:null,
+    date:"Jul 2, 2026 · 11:00 PM ET", venue:"BC Place, Vancouver" },
+
+  { id:13, round:"Round of 32",
+    t1:"🇦🇷", n1:"Argentina",     t2:"🇨🇻", n2:"Cape Verde",
+    s1:null, s2:null, winner:null,
+    date:"Jul 3, 2026 · 2:00 PM ET", venue:"Hard Rock Stadium, Miami" },
+
+  { id:14, round:"Round of 32",
+    t1:"🇨🇴", n1:"Colombia",      t2:"🇬🇭", n2:"Ghana",
+    s1:null, s2:null, winner:null,
+    date:"Jul 3, 2026 · 6:00 PM ET", venue:"Arrowhead Stadium, Kansas City" },
+
+  { id:15, round:"Round of 32",
+    t1:"🇦🇺", n1:"Australia",     t2:"🇪🇬", n2:"Egypt",
+    s1:null, s2:null, winner:null,
+    date:"Jul 3, 2026 · 9:30 PM ET", venue:"AT&T Stadium, Dallas" },
+
+  // ── ROUND OF 16 ─────────────────────────────────────
+  { id:16, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 4, 2026 · 1:00 PM ET",  venue:"NRG Stadium, Houston" },
+  { id:17, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 4, 2026 · 5:00 PM ET",  venue:"Lincoln Financial Field, Philadelphia" },
+  { id:18, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 5, 2026 · 4:00 PM ET",  venue:"MetLife Stadium, New Jersey" },
+  { id:19, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 5, 2026 · 8:00 PM ET",  venue:"Estadio Azteca, Mexico City" },
+  { id:20, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 6, 2026 · 5:00 PM ET",  venue:"Hard Rock Stadium, Miami" },
+  { id:21, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 6, 2026 · 9:00 PM ET",  venue:"Arrowhead Stadium, Kansas City" },
+  { id:22, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 7, 2026 · 5:00 PM ET",  venue:"Levi's Stadium, Santa Clara" },
+  { id:23, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 7, 2026 · 9:00 PM ET",  venue:"AT&T Stadium, Dallas" },
+
+  // ── QUARTER FINALS ───────────────────────────────────
+  { id:24, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 11, 2026 · 4:00 PM ET", venue:"Gillette Stadium, Boston" },
+  { id:25, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 11, 2026 · 8:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
+  { id:26, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 12, 2026 · 5:00 PM ET", venue:"Hard Rock Stadium, Miami" },
+  { id:27, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 12, 2026 · 9:00 PM ET", venue:"Arrowhead Stadium, Kansas City" },
+
+  // ── SEMI FINALS ──────────────────────────────────────
+  { id:28, round:"Semi-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 15, 2026 · 3:00 PM ET", venue:"AT&T Stadium, Dallas" },
+  { id:29, round:"Semi-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 16, 2026 · 3:00 PM ET", venue:"Mercedes-Benz Stadium, Atlanta" },
+
+  // ── FINAL ────────────────────────────────────────────
+  { id:30, round:"🏆 FINAL", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 19, 2026 · 3:00 PM ET", venue:"MetLife Stadium, New Jersey" },
+];
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS RENDERING
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('bracketCanvas');
+const ctx    = canvas.getContext('2d');
+const GOLD   = '#c9a84c';
+const GOLDDIM= '#4a3c1e';
+const BG     = '#111';
+const WHITE  = '#e8e8e8';
+const MUTED  = '#555';
+const LIVE   = '#e03c3c';
+const DONE   = '#4caf50';
+const UPC    = '#5b8dee';
+
+// Rings: r32, r16, qf, sf, final (trophy)
+const RINGS  = [310, 240, 175, 115, 0];
+const NODE_R = 22; // team circle radius
+
+let W, H, CX, CY;
+let hitZones = []; // [{matchId, x, y, r}]
+
+function resize() {
+  const size = Math.min(window.innerWidth * 0.97, 900);
+  canvas.width  = size;
+  canvas.height = size;
+  W = H = size;
+  CX = CY = size / 2;
+  draw();
+}
+
+// Map match slots to angles (degrees, 0=top, clockwise)
+// 32 teams = 16 matches around the circle, evenly spaced
+// Each match occupies 360/16 = 22.5 degrees
+// We pair matches so team1 and team2 are adjacent dots
+
+function matchAngle(matchIndex) {
+  // 16 matches, evenly around circle
+  return (matchIndex / 16) * 360 - 90; // start at top
+}
+
+function toRad(deg) { return deg * Math.PI / 180; }
+
+function pt(cx, cy, r, angleDeg) {
+  const a = toRad(angleDeg);
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+
+function drawGlow(x, y, r, color) {
+  const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r*2);
+  g.addColorStop(0, color + '55');
+  g.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  ctx.arc(x, y, r*2, 0, Math.PI*2);
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
+function statusColor(m) {
+  if (m.s1 !== null && m.s2 !== null) return DONE;
+  if (m.n1 === 'TBD' || m.n2 === 'TBD') return '#333';
+  return UPC;
+}
+
+function drawTeamNode(x, y, m, isTeam1, ringR) {
+  const team = isTeam1 ? { flag: m.t1, name: m.n1 } : { flag: m.t2, name: m.n2 };
+  const isWinner = (isTeam1 && m.winner === 1) || (!isTeam1 && m.winner === 2);
+  const isTBD = team.name === 'TBD';
+  const sc = statusColor(m);
+  const scale = W / 900;
+  const nr = NODE_R * scale;
+
+  // Glow for winner
+  if (isWinner) drawGlow(x, y, nr, GOLD);
+
+  // Circle
+  ctx.beginPath();
+  ctx.arc(x, y, nr, 0, Math.PI*2);
+  ctx.fillStyle = isTBD ? '#1a1a1a' : (isWinner ? '#2a1f00' : '#1c1c1c');
+  ctx.fill();
+  ctx.strokeStyle = isWinner ? GOLD : (isTBD ? '#2a2a2a' : sc);
+  ctx.lineWidth = isWinner ? 2.5 * scale : 1.5 * scale;
+  ctx.stroke();
+
+  // Flag emoji
+  if (!isTBD) {
+    ctx.font = `${Math.round(nr * 1.1)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(team.flag, x, y + 1);
+  } else {
+    ctx.font = `bold ${Math.round(nr * 0.9)}px Inter, sans-serif`;
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', x, y + 1);
+  }
+
+  // Name label (outside the ring)
+  const labelR = ringR + nr + 14 * scale;
+  // Angle from center to this node
+  const angleDeg = Math.atan2(y - CY, x - CX) * 180 / Math.PI;
+  const lp = pt(CX, CY, labelR, angleDeg);
+
+  // Determine text anchor based on quadrant
+  const isRight = lp.x > CX;
+  ctx.textAlign = isRight ? 'left' : 'right';
+  ctx.textBaseline = 'middle';
+  ctx.font = `${Math.round(10 * scale)}px Inter, sans-serif`;
+  ctx.fillStyle = isTBD ? '#333' : (isWinner ? GOLD : WHITE);
+
+  const shortName = team.name.length > 11 ? team.name.slice(0,10)+'…' : team.name;
+  ctx.fillText(shortName, lp.x + (isRight ? 4*scale : -4*scale), lp.y);
+}
+
+function drawConnector(x1, y1, x2, y2, color) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  // Curved line toward center then out
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  // Pull midpoint slightly toward center
+  const pull = 0.85;
+  const pmx = CX + (mx - CX) * pull;
+  const pmy = CY + (my - CY) * pull;
+  ctx.quadraticCurveTo(pmx, pmy, x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  hitZones = [];
+  const scale = W / 900;
+
+  // Background gradient
+  const bg = ctx.createRadialGradient(CX, CY, 0, CX, CY, W * 0.5);
+  bg.addColorStop(0, '#1a1500');
+  bg.addColorStop(0.3, '#0f0f0f');
+  bg.addColorStop(1, '#080808');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ring guide lines (subtle)
+  RINGS.slice(0, 4).forEach(r => {
+    ctx.beginPath();
+    ctx.arc(CX, CY, r * scale, 0, Math.PI * 2);
+    ctx.strokeStyle = '#1e1e1e';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Draw spoke lines connecting rounds (background layer)
+  // R32 → R16 → QF → SF → center
+  for (let i = 0; i < 16; i++) {
+    const ang = matchAngle(i);
+    // Two team positions per match (team1 slightly ccw, team2 slightly cw)
+    const halfSpan = 5.5; // degrees half-span between the two teams
+    const angT1 = ang - halfSpan;
+    const angT2 = ang + halfSpan;
+
+    const r32t1 = pt(CX, CY, RINGS[0] * scale, angT1);
+    const r32t2 = pt(CX, CY, RINGS[0] * scale, angT2);
+    const r32mid = pt(CX, CY, RINGS[0] * scale, ang);
+    const r16    = pt(CX, CY, RINGS[1] * scale, ang);
+    const qf     = pt(CX, CY, RINGS[2] * scale, ang);
+    const sf     = pt(CX, CY, RINGS[3] * scale, ang);
+
+    // Team1 to team2 arc connector at R32 ring
+    ctx.beginPath();
+    ctx.arc(CX, CY, RINGS[0] * scale, toRad(angT1 - 90) + Math.PI/2, toRad(angT2 - 90) + Math.PI/2);
+    // Just draw a line between them instead
+    ctx.beginPath();
+    ctx.moveTo(r32t1.x, r32t1.y);
+    ctx.lineTo(r32t2.x, r32t2.y);
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // R32 mid → R16
+    ctx.beginPath();
+    ctx.moveTo(r32mid.x, r32mid.y);
+    ctx.lineTo(r16.x, r16.y);
+    ctx.strokeStyle = '#1d1d1d';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // R16 → QF (every 2 matches pair up)
+    if (i % 2 === 0) {
+      const ang2   = matchAngle(i + 1);
+      const midAng = (ang + ang2) / 2;
+      const qfPos  = pt(CX, CY, RINGS[2] * scale, midAng);
+      const r16a   = pt(CX, CY, RINGS[1] * scale, ang);
+      const r16b   = pt(CX, CY, RINGS[1] * scale, ang2);
+      ctx.beginPath(); ctx.moveTo(r16a.x, r16a.y); ctx.lineTo(qfPos.x, qfPos.y);
+      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r16b.x, r16b.y); ctx.lineTo(qfPos.x, qfPos.y);
+      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
+
+      // QF → SF (every 4 matches → 1 SF)
+      if (i % 4 === 0) {
+        const angC   = matchAngle(i + 2);
+        const angD   = matchAngle(i + 3);
+        const midSF  = (ang + ang2 + angC + angD) / 4;
+        const sfPos  = pt(CX, CY, RINGS[3] * scale, midSF);
+        const qfA    = pt(CX, CY, RINGS[2] * scale, (ang + ang2) / 2);
+        const qfB    = pt(CX, CY, RINGS[2] * scale, (angC + angD) / 2);
+        ctx.beginPath(); ctx.moveTo(qfA.x, qfA.y); ctx.lineTo(sfPos.x, sfPos.y);
+        ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(qfB.x, qfB.y); ctx.lineTo(sfPos.x, sfPos.y);
+        ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
+
+        // SF → center gold line
+        ctx.beginPath();
+        ctx.moveTo(sfPos.x, sfPos.y);
+        ctx.lineTo(CX, CY);
+        ctx.strokeStyle = GOLDDIM;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
-      return div;
     }
+  }
 
-    function buildMatchEl(matchId) {
-      const m = matches[matchId];
-      const div = document.createElement('div');
-      div.className = 'match';
-      div.appendChild(buildTeamEl(m.team1, m.score1, m.winner === 1, matchId, 1));
-      div.appendChild(buildTeamEl(m.team2, m.score2, m.winner === 2, matchId, 2));
-      const connector = document.createElement('div');
-      connector.className = 'match-connector';
-      div.appendChild(connector);
-      return div;
+  // Draw R32 nodes (16 matches × 2 teams = 32 nodes)
+  for (let i = 0; i < 16; i++) {
+    const m = MATCHES[i];
+    const ang = matchAngle(i);
+    const halfSpan = 5.5;
+    const p1 = pt(CX, CY, RINGS[0] * scale, ang - halfSpan);
+    const p2 = pt(CX, CY, RINGS[0] * scale, ang + halfSpan);
+    drawTeamNode(p1.x, p1.y, m, true,  RINGS[0] * scale);
+    drawTeamNode(p2.x, p2.y, m, false, RINGS[0] * scale);
+
+    // Hit zone on the midpoint between the two nodes
+    const mid = pt(CX, CY, RINGS[0] * scale, ang);
+    hitZones.push({ matchId: m.id, x: mid.x, y: mid.y, r: NODE_R * scale * 2.2 });
+  }
+
+  // Draw R16 nodes
+  for (let i = 0; i < 8; i++) {
+    const m = MATCHES[16 + i];
+    // R16 match i corresponds to R32 matches i*2 and i*2+1
+    const angA = matchAngle(i * 2);
+    const angB = matchAngle(i * 2 + 1);
+    const midAng = (angA + angB) / 2;
+    const p = pt(CX, CY, RINGS[1] * scale, midAng);
+    drawSingleNode(p.x, p.y, m, RINGS[1] * scale);
+    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
+  }
+
+  // Draw QF nodes
+  for (let i = 0; i < 4; i++) {
+    const m = MATCHES[24 + i];
+    const baseMatch = i * 4;
+    const angs = [0,1,2,3].map(j => matchAngle(baseMatch + j));
+    const midAng = angs.reduce((a,b)=>a+b,0) / 4;
+    const p = pt(CX, CY, RINGS[2] * scale, midAng);
+    drawSingleNode(p.x, p.y, m, RINGS[2] * scale);
+    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
+  }
+
+  // Draw SF nodes
+  for (let i = 0; i < 2; i++) {
+    const m = MATCHES[28 + i];
+    const baseMatch = i * 8;
+    const angs = [0,1,2,3,4,5,6,7].map(j => matchAngle(baseMatch + j));
+    const midAng = angs.reduce((a,b)=>a+b,0) / 8;
+    const p = pt(CX, CY, RINGS[3] * scale, midAng);
+    drawSingleNode(p.x, p.y, m, RINGS[3] * scale);
+    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
+  }
+
+  // Trophy center
+  drawTrophyCenter(scale);
+
+  // Final hit zone (center)
+  hitZones.push({ matchId: 30, x: CX, y: CY, r: 42 * scale });
+}
+
+function drawSingleNode(x, y, m, ringR) {
+  const scale = W / 900;
+  const nr = NODE_R * 0.82 * scale;
+  const sc = statusColor(m);
+  const isTBD = m.n1 === 'TBD' && m.n2 === 'TBD';
+  const isWinner = m.winner !== null;
+
+  if (isWinner) drawGlow(x, y, nr, GOLD);
+
+  ctx.beginPath();
+  ctx.arc(x, y, nr, 0, Math.PI * 2);
+  ctx.fillStyle = isTBD ? '#141414' : '#1c1c1c';
+  ctx.fill();
+  ctx.strokeStyle = isTBD ? '#252525' : sc;
+  ctx.lineWidth = 1.5 * scale;
+  ctx.stroke();
+
+  // Show flags or dots
+  if (!isTBD) {
+    ctx.font = `${Math.round(nr * 0.85)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(m.t1, x - nr * 0.45, y + 1);
+    ctx.fillText(m.t2, x + nr * 0.45, y + 1);
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, nr * 0.25, 0, Math.PI * 2);
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fill();
+  }
+}
+
+function drawTrophyCenter(scale) {
+  const r = 40 * scale;
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(CX, CY, r, 0, Math.PI * 2);
+  const gr = ctx.createRadialGradient(CX, CY, 0, CX, CY, r);
+  gr.addColorStop(0, '#2a1e00');
+  gr.addColorStop(1, '#110e00');
+  ctx.fillStyle = gr;
+  ctx.fill();
+  ctx.strokeStyle = GOLD;
+  ctx.lineWidth = 2 * scale;
+  ctx.stroke();
+
+  // Trophy emoji
+  ctx.font = `${Math.round(30 * scale)}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🏆', CX, CY + 1);
+
+  // Glow
+  drawGlow(CX, CY, r, GOLD);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLICK HANDLING
+// ═══════════════════════════════════════════════════════
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  // Scale for device pixel ratio
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx = mx * scaleX;
+  const cy = my * scaleY;
+
+  for (const z of hitZones) {
+    const dx = cx - z.x, dy = cy - z.y;
+    if (dx*dx + dy*dy <= z.r*z.r) {
+      openModal(z.matchId);
+      return;
     }
+  }
+});
 
-    const bracketEl = document.getElementById('bracket');
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
+  let hit = false;
+  for (const z of hitZones) {
+    const dx = mx - z.x, dy = my - z.y;
+    if (dx*dx + dy*dy <= z.r*z.r) { hit = true; break; }
+  }
+  canvas.style.cursor = hit ? 'pointer' : 'default';
+});
 
-    structure.forEach((round, i) => {
-      if (i === 4) {
-        // Insert trophy center
-        const trophy = document.createElement('div');
-        trophy.className = 'trophy-center';
-        trophy.innerHTML = `<div class="trophy-icon">🏆</div><div class="trophy-label">Champion</div>`;
-        bracketEl.appendChild(trophy);
-      }
+// ═══════════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════════
+function openModal(id) {
+  const m = MATCHES.find(x => x.id === id);
+  if (!m) return;
 
-      const col = document.createElement('div');
-      col.className = 'round';
-      const label = document.createElement('div');
-      label.className = 'round-label';
-      label.textContent = round.label;
-      col.appendChild(label);
-      round.matches.forEach(mId => col.appendChild(buildMatchEl(mId)));
-      bracketEl.appendChild(col);
-    });
+  document.getElementById('mRound').textContent  = m.round;
+  document.getElementById('mFlag1').textContent  = m.t1;
+  document.getElementById('mFlag2').textContent  = m.t2;
+  document.getElementById('mName1').textContent  = m.n1;
+  document.getElementById('mName2').textContent  = m.n2;
 
-    // ── MODAL ────────────────────────────────────────────────────
-    function openModal(matchId) {
-      const m = matches[matchId];
-      document.getElementById('modalRound').textContent = m.round;
-      document.getElementById('modalFlag1').textContent = m.team1.flag;
-      document.getElementById('modalFlag2').textContent = m.team2.flag;
-      document.getElementById('modalName1').textContent = m.team1.name;
-      document.getElementById('modalName2').textContent = m.team2.name;
-      document.getElementById('modalScore1').textContent = m.score1 !== null ? m.score1 : '-';
-      document.getElementById('modalScore2').textContent = m.score2 !== null ? m.score2 : '-';
-      document.getElementById('modalDate').textContent = m.date;
-      document.getElementById('modalVenue').textContent = m.venue;
+  const n1el = document.getElementById('mName1');
+  const n2el = document.getElementById('mName2');
+  n1el.className = 'modal-tname' + (m.winner===1 ? ' winner-name' : '');
+  n2el.className = 'modal-tname' + (m.winner===2 ? ' winner-name' : '');
 
-      const statusEl = document.getElementById('modalStatus');
-      if (m.score1 !== null && m.score2 !== null) {
-        statusEl.textContent = 'Full Time';
-        statusEl.className = 'modal-status status-finished';
-      } else if (m.date === 'TBD') {
-        statusEl.textContent = 'Not Yet Scheduled';
-        statusEl.className = 'modal-status status-tbd';
-      } else {
-        statusEl.textContent = 'Upcoming';
-        statusEl.className = 'modal-status status-upcoming';
-      }
+  const hasScore = m.s1 !== null && m.s2 !== null;
+  document.getElementById('mScore').textContent = hasScore ? `${m.s1} — ${m.s2}` : '– vs –';
+  document.getElementById('mDate').textContent  = m.date;
+  document.getElementById('mVenue').textContent = m.venue;
 
-      document.getElementById('modalOverlay').classList.add('open');
-    }
+  const badge = document.getElementById('mBadge');
+  if (hasScore) {
+    badge.textContent = 'Full Time'; badge.className = 'badge badge-done';
+  } else if (m.n1 === 'TBD') {
+    badge.textContent = 'Not Yet Set'; badge.className = 'badge badge-tbd';
+  } else {
+    badge.textContent = 'Upcoming'; badge.className = 'badge badge-upcoming';
+  }
 
-    function closeModal() {
-      document.getElementById('modalOverlay').classList.remove('open');
-    }
+  document.getElementById('overlay').classList.add('open');
+}
 
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeModal();
-    });
-  </script>
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// Init
+window.addEventListener('resize', resize);
+resize();
+</script>
 </body>
 </html>
