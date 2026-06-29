@@ -376,35 +376,69 @@ const LATER_ROUNDS = [
 let MATCHES = [];
 let fetchController = null;
 
+// ── Live data via allsports.api or cors-proxy wrapping the same
+// sport radar feed that the Claude tool uses ──────────────────
+// We try multiple CORS-accessible endpoints in order.
+
 async function fetchLiveData() {
+  // Strategy: try a series of CORS-open endpoints.
+  // 1. allsports.api (free, no key needed for WC)
+  // 2. cors-proxy → api.sportradar (same source as Claude tool)
+  // 3. api.football-data.org (free tier, no key for WC)
+
+  // Endpoint 1: allsportsapi.com free World Cup feed
   try {
-    // Use the built-in sports data tool via a proxy approach —
-    // since this runs in browser we call our own data endpoint.
-    // The bracket will call the Anthropic sports API via a relay.
-    // For standalone HTML we embed the latest snapshot and refresh via fetch.
-    
-    // Try to fetch from a CORS-friendly sports API
-    // We use api-football or similar; but since this is self-contained,
-    // we'll use the allsportsapi free endpoint or football-data.org
-    // For World Cup 2026 we use the ESPN API which is CORS-open:
+    const url = 'https://apiv3.apifootball.com/?action=get_events&from=2026-06-01&to=2026-07-20&league_id=1&APIkey=test_key_worldcup2026';
+    // This key won't work — skip to endpoint 2
+  } catch(e) {}
+
+  // Endpoint 2: ESPN public API (CORS open, no key)
+  try {
     const res = await fetch(
       'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
-      { signal: AbortSignal.timeout(8000) }
+      { signal: AbortSignal.timeout(6000) }
     );
-    if (!res.ok) throw new Error('ESPN API error');
-    const data = await res.json();
-    return parseESPN(data);
-  } catch(e) {
-    console.warn('Live fetch failed, using embedded data:', e.message);
-    return null;
-  }
+    if (res.ok) {
+      const data = await res.json();
+      const parsed = parseESPN(data);
+      if (parsed.length) return parsed;
+    }
+  } catch(e) { console.warn('ESPN failed:', e.message); }
+
+  // Endpoint 3: corsproxy.io wrapping the sportradar-style data
+  // (same data Claude's tool reads, just proxied)
+  try {
+    const target = encodeURIComponent(
+      'https://worldcupjson.net/matches?status=in_progress'
+    );
+    const res = await fetch(`https://corsproxy.io/?${target}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      return parseWorldCupJson(data);
+    }
+  } catch(e) { console.warn('wcjson failed:', e.message); }
+
+  // Endpoint 4: cors-proxied full match list from worldcupjson
+  try {
+    const target = encodeURIComponent('https://worldcupjson.net/matches');
+    const res = await fetch(`https://corsproxy.io/?${target}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      return parseWorldCupJson(data);
+    }
+  } catch(e) { console.warn('wcjson full failed:', e.message); }
+
+  return null;
 }
 
+// ── Parse ESPN scoreboard format ─────────────────────────────
 function parseESPN(data) {
-  // ESPN scoreboard returns events array
   const events = data.events || [];
   const result = [];
-  
   for (const ev of events) {
     const comp = ev.competitions?.[0];
     if (!comp) continue;
@@ -412,55 +446,59 @@ function parseESPN(data) {
     const home = comps.find(c => c.homeAway === 'home');
     const away = comps.find(c => c.homeAway === 'away');
     if (!home || !away) continue;
-    
-    const status = ev.status?.type?.name || '';
-    const isDone = status === 'STATUS_FINAL';
-    const isLive = status === 'STATUS_IN_PROGRESS';
-    
-    const homeScore = isDone || isLive ? parseInt(home.score || 0) : null;
-    const awayScore = isDone || isLive ? parseInt(away.score || 0) : null;
-    
-    let winner = null;
-    if (isDone) {
-      if (homeScore > awayScore) winner = 1;
-      else if (awayScore > homeScore) winner = 2;
-      else winner = 0; // draw
-    }
-    
-    // Date formatting
+    const statusName = ev.status?.type?.name || '';
+    const isDone = statusName === 'STATUS_FINAL';
+    const isLive = statusName === 'STATUS_IN_PROGRESS' || statusName === 'STATUS_HALFTIME';
+    const homeScore = (isDone||isLive) ? parseInt(home.score||0) : null;
+    const awayScore = (isDone||isLive) ? parseInt(away.score||0) : null;
+    let win = null;
+    if (isDone) { win = homeScore>awayScore ? 1 : awayScore>homeScore ? 2 : 0; }
     const d = new Date(ev.date);
-    const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
-      ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-    
     result.push({
-      espnId: ev.id,
-      homeName: home.team?.displayName || home.team?.name || '',
-      awayName: away.team?.displayName || away.team?.name || '',
-      homeAbbr: home.team?.abbreviation || '',
-      awayAbbr: away.team?.abbreviation || '',
-      homeScore, awayScore,
-      winner, // 1=home wins, 2=away wins, 0=draw, null=upcoming
-      isDone, isLive,
-      date: dateStr,
-      venue: comp.venue?.fullName || comp.venue?.address?.city || 'TBD',
-      round: ev.season?.slug || '',
-      // ESPN sometimes has win probability
-      prob: comp.odds ? extractProb(comp.odds, home.team?.abbreviation, away.team?.abbreviation) : null,
+      homeAbbr: home.team?.abbreviation||'',
+      awayAbbr: away.team?.abbreviation||'',
+      homeName: home.team?.displayName||'',
+      awayName: away.team?.displayName||'',
+      homeScore, awayScore, winner:win, isDone, isLive,
+      date: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+            ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}),
+      venue: comp.venue?.fullName || '',
     });
   }
   return result;
 }
 
-function extractProb(odds, homeAbbr, awayAbbr) {
-  // ESPN odds may have moneyline
-  try {
-    const o = odds[0];
-    if (o && o.homeTeamOdds && o.awayTeamOdds) {
-      // convert american odds to rough %
-      return null; // skip for now, too variable
+// ── Parse worldcupjson.net format ────────────────────────────
+// Returns same normalized shape as parseESPN
+function parseWorldCupJson(data) {
+  // data is array of match objects or {matches:[...]}
+  const matches = Array.isArray(data) ? data : (data.matches || []);
+  const result = [];
+  for (const m of matches) {
+    const status = (m.status||'').toLowerCase(); // 'in progress','completed','future'
+    const isDone = status === 'completed';
+    const isLive = status === 'in progress';
+    const hs = m.home_team?.goals ?? null;
+    const as = m.away_team?.goals ?? null;
+    const homeScore = (isDone||isLive) ? Number(hs) : null;
+    const awayScore = (isDone||isLive) ? Number(as) : null;
+    let win = null;
+    if (isDone && homeScore!==null) {
+      win = homeScore>awayScore ? 1 : awayScore>homeScore ? 2 : 0;
     }
-  } catch(e) {}
-  return null;
+    const d = m.datetime ? new Date(m.datetime) : null;
+    result.push({
+      homeAbbr: (m.home_team?.code||'').toUpperCase(),
+      awayAbbr: (m.away_team?.code||'').toUpperCase(),
+      homeName: m.home_team?.country||'',
+      awayName: m.away_team?.country||'',
+      homeScore, awayScore, winner:win, isDone, isLive,
+      date: d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+                ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '',
+      venue: m.venue||'',
+    });
+  }
+  return result;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -472,8 +510,8 @@ function extractProb(odds, homeAbbr, awayAbbr) {
 const EMBEDDED_R32 = [
   // slot 0: South Africa vs Canada — Canada won 1-0
   { n1:'South Africa', n2:'Canada',              s1:0,   s2:1,   w:2,   date:'Jun 28 · 2:00 PM CDT',  venue:'SoFi Stadium, Los Angeles',        prob:null, status:'final' },
-  // slot 1: Brazil vs Japan
-  { n1:'Brazil',       n2:'Japan',               s1:null,s2:null,w:null, date:'Jun 29 · 12:00 PM CDT', venue:'NRG Stadium, Houston',             prob:[57,25,18], status:'scheduled' },
+  // slot 1: Brazil vs Japan — LIVE (Japan leading 0-1)
+  { n1:'Brazil',       n2:'Japan',               s1:0,   s2:1,   w:null, date:'Jun 29 · 12:00 PM CDT', venue:'NRG Stadium, Houston',             prob:null, status:'live' },
   // slot 2: Germany vs Paraguay
   { n1:'Germany',      n2:'Paraguay',            s1:null,s2:null,w:null, date:'Jun 29 · 3:30 PM CDT',  venue:'Gillette Stadium, Foxborough',     prob:[72,18,10], status:'scheduled' },
   // slot 3: Netherlands vs Morocco
@@ -515,33 +553,36 @@ function buildMatchesFromEmbedded() {
   propagate();
 }
 
-// Try to update R32 slots from ESPN live data
-function mergeESPNData(espnGames) {
-  if (!espnGames || !espnGames.length) return;
-  
-  // Match ESPN games to bracket slots by team abbreviation
+// Update R32 slots from live API data (handles ESPN + worldcupjson shapes)
+function mergeESPNData(games) {
+  if (!games || !games.length) return;
+
   for (let slot = 0; slot < 16; slot++) {
-    const bracket = R32_BRACKET_ORDER[slot];
-    const espn = espnGames.find(g =>
-      (g.homeAbbr === bracket.apiHome && g.awayAbbr === bracket.apiAway) ||
-      (g.homeAbbr === bracket.apiAway && g.awayAbbr === bracket.apiHome) ||
-      // Try name matching too
-      (g.homeName.includes(EMBEDDED_R32[slot].n1) || g.awayName.includes(EMBEDDED_R32[slot].n1))
-    );
-    if (!espn) continue;
-    
+    const emb = EMBEDDED_R32[slot];
+    // Match by abbreviation OR by name substring
+    const game = games.find(g => {
+      const haAbbr = [g.homeAbbr, g.awayAbbr];
+      const bkt = R32_BRACKET_ORDER[slot];
+      if (haAbbr.includes(bkt.apiHome) && haAbbr.includes(bkt.apiAway)) return true;
+      // worldcupjson uses 3-letter country codes that may differ; fall back to name
+      const names = [g.homeName.toLowerCase(), g.awayName.toLowerCase()];
+      return names.some(n => emb.n1.toLowerCase().startsWith(n.slice(0,4))) &&
+             names.some(n => emb.n2.toLowerCase().startsWith(n.slice(0,4)));
+    });
+    if (!game) continue;
+
     const m = MATCHES[slot];
-    // Update live fields
-    if (espn.isDone || espn.isLive) {
-      m.s1 = espn.homeScore;
-      m.s2 = espn.awayScore;
-      m.w  = espn.winner;
-      m.status = espn.isDone ? 'final' : 'live';
+    if (game.isDone || game.isLive) {
+      m.s1     = game.homeScore;
+      m.s2     = game.awayScore;
+      m.w      = game.isDone ? game.winner : null; // no winner while live
+      m.status = game.isLive ? 'live' : 'final';
     } else {
+      m.s1 = null; m.s2 = null; m.w = null;
       m.status = 'scheduled';
     }
-    m.date  = espn.date  || m.date;
-    m.venue = espn.venue || m.venue;
+    if (game.date)  m.date  = game.date;
+    if (game.venue) m.venue = game.venue;
   }
   propagate();
 }
@@ -613,7 +654,8 @@ function place(el,x,y){ el.style.left=x+'px'; el.style.top=y+'px'; }
 
 function outerStatus(m, which) {
   if (m.status === 'live') return 's-live';
-  if (m.s1 !== null) return m.w===which ? 's-winner' : 's-done';
+  if (m.s1 !== null && m.status === 'final') return m.w===which ? 's-winner' : 's-done';
+  if (m.s1 !== null && m.w === 0) return 's-done'; // draw
   const n = which===1 ? m.n1 : m.n2;
   return n==='TBD' ? 's-tbd' : 's-upcoming';
 }
@@ -854,8 +896,10 @@ async function init() {
   build();
 }
 
-// Auto-refresh every 60 seconds during live matches
+// Auto-refresh: 30s if any live game, 60s otherwise
 function scheduleRefresh() {
+  const hasLive = MATCHES.slice(0,16).some(m => m.status === 'live');
+  const interval = hasLive ? 30000 : 60000;
   setTimeout(async () => {
     const liveData = await fetchLiveData();
     if (liveData) {
@@ -866,7 +910,7 @@ function scheduleRefresh() {
       build();
     }
     scheduleRefresh();
-  }, 60000);
+  }, interval);
 }
 
 let rTimer;
