@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>World Cup 2026 — Bracket</title>
+<title>World Cup 2026</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
 
   :root {
     --gold: #c9a84c;
-    --gold-dim: #7a6030;
+    --gold-dim: #5a4520;
     --bg: #0c0c0c;
-    --surface: #161616;
+    --node-bg: #1a1a1a;
     --border: #2a2a2a;
-    --text: #e8e8e8;
-    --muted: #666;
-    --live: #e03c3c;
+    --text: #e0e0e0;
+    --muted: #555;
     --done: #4caf50;
-    --upcoming: #5b8dee;
+    --live: #e03c3c;
+    --upcoming: #4a7fd4;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -27,68 +27,177 @@
     color: var(--text);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 60px;
   }
 
-  /* HEADER */
   header {
     text-align: center;
-    padding: 36px 20px 20px;
-    position: relative;
-    z-index: 2;
+    padding: 32px 20px 16px;
   }
   header h1 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-size: clamp(2rem, 5vw, 3.2rem);
     letter-spacing: 6px;
     color: var(--gold);
     line-height: 1;
   }
   header p {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     letter-spacing: 4px;
     color: var(--muted);
-    margin-top: 6px;
+    margin-top: 5px;
     text-transform: uppercase;
   }
 
-  /* CIRCULAR BRACKET CANVAS */
-  #bracketCanvas {
-    display: block;
+  /* ── BRACKET WRAPPER ── */
+  .bracket-scene {
+    position: relative;
+    width: min(900px, 98vw);
+    height: min(900px, 98vw);
     margin: 0 auto;
-    max-width: 900px;
-    width: 100%;
-    cursor: default;
   }
 
-  /* LEGEND */
+  /* ── NODES ── */
+  .node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .node:hover .circle { transform: scale(1.12); border-color: var(--gold) !important; }
+
+  .circle {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--node-bg);
+    border: 2px solid var(--border);
+    transition: transform .18s, border-color .18s;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Size variants */
+  .sz-lg  { width: 52px; height: 52px; font-size: 1.8rem; }
+  .sz-md  { width: 44px; height: 44px; font-size: 1.5rem; }
+  .sz-sm  { width: 36px; height: 36px; font-size: 1.2rem; }
+  .sz-xs  { width: 30px; height: 30px; font-size: 0.95rem; }
+
+  /* Double-flag circle (R16+) */
+  .circle-pair {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    background: var(--node-bg);
+    border: 2px solid var(--border);
+    transition: transform .18s, border-color .18s;
+    flex-shrink: 0;
+  }
+  .node:hover .circle-pair { transform: scale(1.12); border-color: var(--gold) !important; }
+
+  .circle-pair .flag-half { font-size: 0.85rem; line-height: 1; }
+
+  .sz-pair-md { width: 44px; height: 44px; }
+  .sz-pair-sm { width: 36px; height: 36px; }
+  .sz-pair-xs { width: 30px; height: 30px; }
+
+  .node-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    white-space: nowrap;
+    text-align: center;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  .node-label.gold { color: var(--gold); }
+  .node-label.muted { color: var(--muted); }
+
+  /* Status ring colors */
+  .status-done     { border-color: var(--done) !important; }
+  .status-upcoming { border-color: var(--upcoming) !important; }
+  .status-live     { border-color: var(--live) !important; animation: pulse-border 1s infinite; }
+  .status-tbd      { border-color: #262626 !important; }
+  .status-winner   { border-color: var(--gold) !important; box-shadow: 0 0 12px rgba(201,168,76,0.4); }
+
+  @keyframes pulse-border {
+    0%,100% { box-shadow: 0 0 0 0 rgba(224,60,60,0.5); }
+    50%      { box-shadow: 0 0 0 4px rgba(224,60,60,0); }
+  }
+
+  /* ── TROPHY CENTER ── */
+  .trophy-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    cursor: pointer;
+  }
+  .trophy-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #2a1e00, #0f0c00);
+    border: 2.5px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 0 30px rgba(201,168,76,0.35);
+    transition: transform .18s;
+  }
+  .trophy-node:hover .trophy-circle { transform: scale(1.1); }
+
+  /* ── SVG LINES ── */
+  .lines-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── LEGEND ── */
   .legend {
     display: flex;
-    justify-content: center;
-    gap: 24px;
-    padding: 12px 20px 30px;
+    gap: 22px;
+    margin-top: 20px;
     flex-wrap: wrap;
+    justify-content: center;
   }
   .legend-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 1.5px;
     color: var(--muted);
     text-transform: uppercase;
   }
-  .legend-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-  /* MODAL */
+  /* ── MODAL ── */
   .overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.82);
-    z-index: 200;
+    background: rgba(0,0,0,0.8);
+    z-index: 300;
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -100,112 +209,51 @@
     border: 1px solid var(--gold-dim);
     border-radius: 14px;
     padding: 28px;
-    max-width: 400px;
+    max-width: 380px;
     width: 100%;
     position: relative;
-    box-shadow: 0 0 60px rgba(201,168,76,0.12);
+    box-shadow: 0 0 50px rgba(201,168,76,0.1);
   }
-
   .modal-close {
-    position: absolute; top: 14px; right: 18px;
-    background: none; border: none;
-    color: var(--muted); font-size: 1.1rem; cursor: pointer;
-    transition: color .15s;
+    position: absolute; top:14px; right:16px;
+    background:none; border:none; color:var(--muted);
+    font-size:1.1rem; cursor:pointer; transition:color .15s;
   }
-  .modal-close:hover { color: #fff; }
-
+  .modal-close:hover { color:#fff; }
   .modal-round {
-    font-size: 0.6rem;
-    letter-spacing: 3px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 18px;
+    font-size: 0.58rem; letter-spacing: 3px;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 18px;
   }
-
   .modal-teams {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 22px;
-    gap: 8px;
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 20px;
   }
-
-  .modal-team {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .modal-flag { font-size: 2.8rem; line-height: 1; }
-  .modal-tname {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.3px;
-  }
-  .modal-tname.winner-name { color: var(--gold); }
-
-  .modal-score-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 0 10px;
+  .modal-team { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .modal-flag { font-size: 2.6rem; line-height:1; }
+  .modal-tname { font-size:0.78rem; font-weight:700; text-align:center; }
+  .modal-tname.w { color: var(--gold); }
+  .modal-scores {
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:0 8px;
   }
   .modal-scoreline {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.6rem;
-    letter-spacing: 4px;
-    color: var(--gold);
-    line-height: 1;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:2.4rem; letter-spacing:4px; color:var(--gold); line-height:1;
   }
-  .modal-vs {
-    font-size: 0.6rem;
-    letter-spacing: 2px;
-    color: var(--muted);
-  }
-
-  hr.mdiv { border: none; border-top: 1px solid #1e1e1e; margin: 18px 0; }
-
-  .modal-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .modal-info-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 0.78rem;
-    color: #aaa;
-  }
-  .info-icon { font-size: 1rem; min-width: 18px; }
-  .info-label {
-    display: block;
-    font-size: 0.58rem;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-
+  .modal-vs { font-size:0.58rem; letter-spacing:2px; color:var(--muted); }
+  hr.md { border:none; border-top:1px solid #1e1e1e; margin:16px 0; }
+  .modal-info { display:flex; flex-direction:column; gap:10px; }
+  .modal-info-row { display:flex; align-items:flex-start; gap:10px; font-size:0.78rem; color:#aaa; }
+  .ii { font-size:1rem; min-width:18px; }
+  .il { display:block; font-size:0.56rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:2px; }
   .badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-top: 16px;
+    display:inline-block; padding:4px 12px; border-radius:20px;
+    font-size:0.58rem; font-weight:700; letter-spacing:1.5px;
+    text-transform:uppercase; margin-top:14px;
   }
-  .badge-done     { background:#0d1f0d; color:var(--done);     border:1px solid var(--done); }
-  .badge-live     { background:#1f0d0d; color:var(--live);     border:1px solid var(--live); animation: blink 1s infinite; }
-  .badge-upcoming { background:#0d1020; color:var(--upcoming); border:1px solid var(--upcoming); }
-  .badge-tbd      { background:#151515; color:var(--muted);    border:1px solid #333; }
-
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .b-done     { background:#0d1f0d; color:var(--done);     border:1px solid var(--done); }
+  .b-live     { background:#1f0d0d; color:var(--live);     border:1px solid var(--live); }
+  .b-upcoming { background:#0d1020; color:var(--upcoming); border:1px solid var(--upcoming); }
+  .b-tbd      { background:#151515; color:var(--muted);    border:1px solid #333; }
 </style>
 </head>
 <body>
@@ -215,13 +263,15 @@
   <p>Interactive Bracket — Click any match</p>
 </header>
 
-<canvas id="bracketCanvas"></canvas>
+<div class="bracket-scene" id="scene">
+  <svg class="lines-svg" id="linesSvg"></svg>
+</div>
 
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#4caf50"></div>Full Time</div>
   <div class="legend-item"><div class="legend-dot" style="background:#e03c3c"></div>Live</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#5b8dee"></div>Upcoming</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#444"></div>TBD</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4a7fd4"></div>Upcoming</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#262626"></div>TBD</div>
 </div>
 
 <!-- MODAL -->
@@ -231,27 +281,27 @@
     <div class="modal-round" id="mRound"></div>
     <div class="modal-teams">
       <div class="modal-team">
-        <div class="modal-flag" id="mFlag1"></div>
-        <div class="modal-tname" id="mName1"></div>
+        <div class="modal-flag" id="mF1"></div>
+        <div class="modal-tname" id="mN1"></div>
       </div>
-      <div class="modal-score-wrap">
+      <div class="modal-scores">
         <div class="modal-scoreline" id="mScore"></div>
         <div class="modal-vs">VS</div>
       </div>
       <div class="modal-team">
-        <div class="modal-flag" id="mFlag2"></div>
-        <div class="modal-tname" id="mName2"></div>
+        <div class="modal-flag" id="mF2"></div>
+        <div class="modal-tname" id="mN2"></div>
       </div>
     </div>
-    <hr class="mdiv"/>
+    <hr class="md"/>
     <div class="modal-info">
       <div class="modal-info-row">
-        <div class="info-icon">📅</div>
-        <div><span class="info-label">Date & Time</span><span id="mDate"></span></div>
+        <div class="ii">📅</div>
+        <div><span class="il">Date & Time</span><span id="mDate"></span></div>
       </div>
       <div class="modal-info-row">
-        <div class="info-icon">📍</div>
-        <div><span class="info-label">Venue</span><span id="mVenue"></span></div>
+        <div class="ii">📍</div>
+        <div><span class="il">Venue</span><span id="mVenue"></span></div>
       </div>
     </div>
     <div style="text-align:center"><span class="badge" id="mBadge"></span></div>
@@ -260,531 +310,269 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  MATCH DATA  (update scores as tournament progresses)
-//  winner: 1 = team1 won, 2 = team2 won, null = not played
+// MATCH DATA — update scores here as tournament progresses
+// winner: 1=team1 won, 2=team2 won, null=not played yet
 // ═══════════════════════════════════════════════════════
-const MATCHES = [
-  // ── ROUND OF 32 ─────────────────────────────────────
-  { id:0,  round:"Round of 32",
-    t1:"🇨🇦", n1:"Canada",       t2:"🇿🇦", n2:"South Africa",
-    s1:1, s2:0, winner:1,
-    date:"Jun 28, 2026 · 3:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
-
-  { id:1,  round:"Round of 32",
-    t1:"🇧🇷", n1:"Brazil",        t2:"🇯🇵", n2:"Japan",
-    s1:null, s2:null, winner:null,
-    date:"Jun 29, 2026 · 1:00 PM ET", venue:"NRG Stadium, Houston" },
-
-  { id:2,  round:"Round of 32",
-    t1:"🇩🇪", n1:"Germany",       t2:"🇵🇾", n2:"Paraguay",
-    s1:null, s2:null, winner:null,
-    date:"Jun 29, 2026 · 4:30 PM ET", venue:"Gillette Stadium, Foxborough" },
-
-  { id:3,  round:"Round of 32",
-    t1:"🇳🇱", n1:"Netherlands",   t2:"🇲🇦", n2:"Morocco",
-    s1:null, s2:null, winner:null,
-    date:"Jun 29, 2026 · 9:00 PM ET", venue:"Estadio BBVA, Monterrey" },
-
-  { id:4,  round:"Round of 32",
-    t1:"🇨🇮", n1:"Ivory Coast",   t2:"🇳🇴", n2:"Norway",
-    s1:null, s2:null, winner:null,
-    date:"Jun 30, 2026 · 1:00 PM ET", venue:"AT&T Stadium, Arlington" },
-
-  { id:5,  round:"Round of 32",
-    t1:"🇫🇷", n1:"France",        t2:"🇸🇪", n2:"Sweden",
-    s1:null, s2:null, winner:null,
-    date:"Jun 30, 2026 · 5:00 PM ET", venue:"MetLife Stadium, New Jersey" },
-
-  { id:6,  round:"Round of 32",
-    t1:"🇲🇽", n1:"Mexico",        t2:"🇪🇨", n2:"Ecuador",
-    s1:null, s2:null, winner:null,
-    date:"Jun 30, 2026 · 9:00 PM ET", venue:"Estadio Azteca, Mexico City" },
-
-  { id:7,  round:"Round of 32",
-    t1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", n1:"England",      t2:"🇨🇩", n2:"DR Congo",
-    s1:null, s2:null, winner:null,
-    date:"Jul 1, 2026 · 12:00 PM ET", venue:"Mercedes-Benz Stadium, Atlanta" },
-
-  { id:8,  round:"Round of 32",
-    t1:"🇧🇪", n1:"Belgium",       t2:"🇸🇳", n2:"Senegal",
-    s1:null, s2:null, winner:null,
-    date:"Jul 1, 2026 · 4:00 PM ET", venue:"Lumen Field, Seattle" },
-
-  { id:9,  round:"Round of 32",
-    t1:"🇺🇸", n1:"USA",           t2:"🇧🇦", n2:"Bosnia & Herz.",
-    s1:null, s2:null, winner:null,
-    date:"Jul 1, 2026 · 8:00 PM ET", venue:"Levi's Stadium, Santa Clara" },
-
-  { id:10, round:"Round of 32",
-    t1:"🇪🇸", n1:"Spain",         t2:"🇦🇹", n2:"Austria",
-    s1:null, s2:null, winner:null,
-    date:"Jul 2, 2026 · 3:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
-
-  { id:11, round:"Round of 32",
-    t1:"🇵🇹", n1:"Portugal",      t2:"🇭🇷", n2:"Croatia",
-    s1:null, s2:null, winner:null,
-    date:"Jul 2, 2026 · 7:00 PM ET", venue:"BMO Field, Toronto" },
-
-  { id:12, round:"Round of 32",
-    t1:"🇨🇭", n1:"Switzerland",   t2:"🇩🇿", n2:"Algeria",
-    s1:null, s2:null, winner:null,
-    date:"Jul 2, 2026 · 11:00 PM ET", venue:"BC Place, Vancouver" },
-
-  { id:13, round:"Round of 32",
-    t1:"🇦🇷", n1:"Argentina",     t2:"🇨🇻", n2:"Cape Verde",
-    s1:null, s2:null, winner:null,
-    date:"Jul 3, 2026 · 2:00 PM ET", venue:"Hard Rock Stadium, Miami" },
-
-  { id:14, round:"Round of 32",
-    t1:"🇨🇴", n1:"Colombia",      t2:"🇬🇭", n2:"Ghana",
-    s1:null, s2:null, winner:null,
-    date:"Jul 3, 2026 · 6:00 PM ET", venue:"Arrowhead Stadium, Kansas City" },
-
-  { id:15, round:"Round of 32",
-    t1:"🇦🇺", n1:"Australia",     t2:"🇪🇬", n2:"Egypt",
-    s1:null, s2:null, winner:null,
-    date:"Jul 3, 2026 · 9:30 PM ET", venue:"AT&T Stadium, Dallas" },
-
-  // ── ROUND OF 16 ─────────────────────────────────────
-  { id:16, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 4, 2026 · 1:00 PM ET",  venue:"NRG Stadium, Houston" },
-  { id:17, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 4, 2026 · 5:00 PM ET",  venue:"Lincoln Financial Field, Philadelphia" },
-  { id:18, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 5, 2026 · 4:00 PM ET",  venue:"MetLife Stadium, New Jersey" },
-  { id:19, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 5, 2026 · 8:00 PM ET",  venue:"Estadio Azteca, Mexico City" },
-  { id:20, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 6, 2026 · 5:00 PM ET",  venue:"Hard Rock Stadium, Miami" },
-  { id:21, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 6, 2026 · 9:00 PM ET",  venue:"Arrowhead Stadium, Kansas City" },
-  { id:22, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 7, 2026 · 5:00 PM ET",  venue:"Levi's Stadium, Santa Clara" },
-  { id:23, round:"Round of 16", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 7, 2026 · 9:00 PM ET",  venue:"AT&T Stadium, Dallas" },
-
-  // ── QUARTER FINALS ───────────────────────────────────
-  { id:24, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 11, 2026 · 4:00 PM ET", venue:"Gillette Stadium, Boston" },
-  { id:25, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 11, 2026 · 8:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
-  { id:26, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 12, 2026 · 5:00 PM ET", venue:"Hard Rock Stadium, Miami" },
-  { id:27, round:"Quarter-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 12, 2026 · 9:00 PM ET", venue:"Arrowhead Stadium, Kansas City" },
-
-  // ── SEMI FINALS ──────────────────────────────────────
-  { id:28, round:"Semi-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 15, 2026 · 3:00 PM ET", venue:"AT&T Stadium, Dallas" },
-  { id:29, round:"Semi-Final", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 16, 2026 · 3:00 PM ET", venue:"Mercedes-Benz Stadium, Atlanta" },
-
-  // ── FINAL ────────────────────────────────────────────
-  { id:30, round:"🏆 FINAL", t1:"❓", n1:"TBD", t2:"❓", n2:"TBD", s1:null, s2:null, winner:null, date:"Jul 19, 2026 · 3:00 PM ET", venue:"MetLife Stadium, New Jersey" },
+const M = [
+  // ROUND OF 32 (ids 0–15)
+  { id:0,  r:"Round of 32",    f1:"🇨🇦",n1:"Canada",        f2:"🇿🇦",n2:"South Africa", s1:1,   s2:0,   w:1,    date:"Jun 28 · 3:00 PM ET",  venue:"SoFi Stadium, Los Angeles" },
+  { id:1,  r:"Round of 32",    f1:"🇧🇷",n1:"Brazil",         f2:"🇯🇵",n2:"Japan",         s1:null,s2:null,w:null, date:"Jun 29 · 1:00 PM ET",  venue:"NRG Stadium, Houston" },
+  { id:2,  r:"Round of 32",    f1:"🇩🇪",n1:"Germany",        f2:"🇵🇾",n2:"Paraguay",      s1:null,s2:null,w:null, date:"Jun 29 · 4:30 PM ET",  venue:"Gillette Stadium, Foxborough" },
+  { id:3,  r:"Round of 32",    f1:"🇳🇱",n1:"Netherlands",    f2:"🇲🇦",n2:"Morocco",       s1:null,s2:null,w:null, date:"Jun 29 · 9:00 PM ET",  venue:"Estadio BBVA, Monterrey" },
+  { id:4,  r:"Round of 32",    f1:"🇨🇮",n1:"Ivory Coast",    f2:"🇳🇴",n2:"Norway",        s1:null,s2:null,w:null, date:"Jun 30 · 1:00 PM ET",  venue:"AT&T Stadium, Arlington" },
+  { id:5,  r:"Round of 32",    f1:"🇫🇷",n1:"France",         f2:"🇸🇪",n2:"Sweden",        s1:null,s2:null,w:null, date:"Jun 30 · 5:00 PM ET",  venue:"MetLife Stadium, New Jersey" },
+  { id:6,  r:"Round of 32",    f1:"🇲🇽",n1:"Mexico",         f2:"🇪🇨",n2:"Ecuador",       s1:null,s2:null,w:null, date:"Jun 30 · 9:00 PM ET",  venue:"Estadio Azteca, Mexico City" },
+  { id:7,  r:"Round of 32",    f1:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",n1:"England",       f2:"🇨🇩",n2:"DR Congo",      s1:null,s2:null,w:null, date:"Jul 1 · 12:00 PM ET",  venue:"Mercedes-Benz Stadium, Atlanta" },
+  { id:8,  r:"Round of 32",    f1:"🇧🇪",n1:"Belgium",        f2:"🇸🇳",n2:"Senegal",       s1:null,s2:null,w:null, date:"Jul 1 · 4:00 PM ET",   venue:"Lumen Field, Seattle" },
+  { id:9,  r:"Round of 32",    f1:"🇺🇸",n1:"USA",            f2:"🇧🇦",n2:"Bosnia & Herz.",s1:null,s2:null,w:null, date:"Jul 1 · 8:00 PM ET",   venue:"Levi's Stadium, Santa Clara" },
+  { id:10, r:"Round of 32",    f1:"🇪🇸",n1:"Spain",          f2:"🇦🇹",n2:"Austria",       s1:null,s2:null,w:null, date:"Jul 2 · 3:00 PM ET",   venue:"SoFi Stadium, Los Angeles" },
+  { id:11, r:"Round of 32",    f1:"🇵🇹",n1:"Portugal",       f2:"🇭🇷",n2:"Croatia",       s1:null,s2:null,w:null, date:"Jul 2 · 7:00 PM ET",   venue:"BMO Field, Toronto" },
+  { id:12, r:"Round of 32",    f1:"🇨🇭",n1:"Switzerland",    f2:"🇩🇿",n2:"Algeria",       s1:null,s2:null,w:null, date:"Jul 2 · 11:00 PM ET",  venue:"BC Place, Vancouver" },
+  { id:13, r:"Round of 32",    f1:"🇦🇷",n1:"Argentina",      f2:"🇨🇻",n2:"Cape Verde",    s1:null,s2:null,w:null, date:"Jul 3 · 2:00 PM ET",   venue:"Hard Rock Stadium, Miami" },
+  { id:14, r:"Round of 32",    f1:"🇨🇴",n1:"Colombia",       f2:"🇬🇭",n2:"Ghana",         s1:null,s2:null,w:null, date:"Jul 3 · 6:00 PM ET",   venue:"Arrowhead Stadium, Kansas City" },
+  { id:15, r:"Round of 32",    f1:"🇦🇺",n1:"Australia",      f2:"🇪🇬",n2:"Egypt",         s1:null,s2:null,w:null, date:"Jul 3 · 9:30 PM ET",   venue:"AT&T Stadium, Dallas" },
+  // ROUND OF 16 (ids 16–23)
+  { id:16, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 4 · 1:00 PM ET",  venue:"NRG Stadium, Houston" },
+  { id:17, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 4 · 5:00 PM ET",  venue:"Lincoln Financial Field, Philadelphia" },
+  { id:18, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 5 · 4:00 PM ET",  venue:"MetLife Stadium, New Jersey" },
+  { id:19, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 5 · 8:00 PM ET",  venue:"Estadio Azteca, Mexico City" },
+  { id:20, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 6 · 5:00 PM ET",  venue:"Hard Rock Stadium, Miami" },
+  { id:21, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 6 · 9:00 PM ET",  venue:"Arrowhead Stadium, Kansas City" },
+  { id:22, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 7 · 5:00 PM ET",  venue:"Levi's Stadium, Santa Clara" },
+  { id:23, r:"Round of 16",    f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 7 · 9:00 PM ET",  venue:"AT&T Stadium, Dallas" },
+  // QUARTER FINALS (ids 24–27)
+  { id:24, r:"Quarter-Final",  f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 11 · 4:00 PM ET", venue:"Gillette Stadium, Boston" },
+  { id:25, r:"Quarter-Final",  f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 11 · 8:00 PM ET", venue:"SoFi Stadium, Los Angeles" },
+  { id:26, r:"Quarter-Final",  f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 12 · 5:00 PM ET", venue:"Hard Rock Stadium, Miami" },
+  { id:27, r:"Quarter-Final",  f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 12 · 9:00 PM ET", venue:"Arrowhead Stadium, Kansas City" },
+  // SEMI FINALS (ids 28–29)
+  { id:28, r:"Semi-Final",     f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 15 · 3:00 PM ET", venue:"AT&T Stadium, Dallas" },
+  { id:29, r:"Semi-Final",     f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 16 · 3:00 PM ET", venue:"Mercedes-Benz Stadium, Atlanta" },
+  // FINAL (id 30)
+  { id:30, r:"🏆 FINAL",       f1:"❓",n1:"TBD",f2:"❓",n2:"TBD",s1:null,s2:null,w:null, date:"Jul 19 · 3:00 PM ET", venue:"MetLife Stadium, New Jersey" },
 ];
 
 // ═══════════════════════════════════════════════════════
-//  CANVAS RENDERING
+// LAYOUT ENGINE
 // ═══════════════════════════════════════════════════════
-const canvas = document.getElementById('bracketCanvas');
-const ctx    = canvas.getContext('2d');
-const GOLD   = '#c9a84c';
-const GOLDDIM= '#4a3c1e';
-const BG     = '#111';
-const WHITE  = '#e8e8e8';
-const MUTED  = '#555';
-const LIVE   = '#e03c3c';
-const DONE   = '#4caf50';
-const UPC    = '#5b8dee';
+const scene = document.getElementById('scene');
+const svg   = document.getElementById('linesSvg');
 
-// Rings: r32, r16, qf, sf, final (trophy)
-const RINGS  = [310, 240, 175, 115, 0];
-const NODE_R = 22; // team circle radius
+// Radii as fractions of half the scene size (0..1)
+// R32=outermost, R16, QF, SF, trophy=center
+const RADII = { r32:0.88, r16:0.66, qf:0.46, sf:0.28 };
 
-let W, H, CX, CY;
-let hitZones = []; // [{matchId, x, y, r}]
-
-function resize() {
-  const size = Math.min(window.innerWidth * 0.97, 900);
-  canvas.width  = size;
-  canvas.height = size;
-  W = H = size;
-  CX = CY = size / 2;
-  draw();
+function polar(frac, angleDeg) {
+  const size  = scene.offsetWidth;
+  const cx    = size / 2;
+  const cy    = size / 2;
+  const r     = frac * cx;
+  const rad   = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-// Map match slots to angles (degrees, 0=top, clockwise)
-// 32 teams = 16 matches around the circle, evenly spaced
-// Each match occupies 360/16 = 22.5 degrees
-// We pair matches so team1 and team2 are adjacent dots
+// 16 matches, angles evenly spaced. Match i centred at i*(360/16)
+function matchCentreAngle(i) { return i * (360 / 16); }
 
-function matchAngle(matchIndex) {
-  // 16 matches, evenly around circle
-  return (matchIndex / 16) * 360 - 90; // start at top
+function statusClass(m) {
+  if (m.s1 !== null && m.s2 !== null) return 'status-done';
+  if (m.n1 === 'TBD' && m.n2 === 'TBD') return 'status-tbd';
+  return 'status-upcoming';
 }
 
-function toRad(deg) { return deg * Math.PI / 180; }
+function makeNode(matchId, x, y, opts) {
+  const m    = M[matchId];
+  const el   = document.createElement('div');
+  el.className = 'node';
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  el.onclick = () => openModal(matchId);
 
-function pt(cx, cy, r, angleDeg) {
-  const a = toRad(angleDeg);
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-}
+  const isTBD = m.n1 === 'TBD' && m.n2 === 'TBD';
 
-function drawGlow(x, y, r, color) {
-  const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r*2);
-  g.addColorStop(0, color + '55');
-  g.addColorStop(1, 'transparent');
-  ctx.beginPath();
-  ctx.arc(x, y, r*2, 0, Math.PI*2);
-  ctx.fillStyle = g;
-  ctx.fill();
-}
-
-function statusColor(m) {
-  if (m.s1 !== null && m.s2 !== null) return DONE;
-  if (m.n1 === 'TBD' || m.n2 === 'TBD') return '#333';
-  return UPC;
-}
-
-function drawTeamNode(x, y, m, isTeam1, ringR) {
-  const team = isTeam1 ? { flag: m.t1, name: m.n1 } : { flag: m.t2, name: m.n2 };
-  const isWinner = (isTeam1 && m.winner === 1) || (!isTeam1 && m.winner === 2);
-  const isTBD = team.name === 'TBD';
-  const sc = statusColor(m);
-  const scale = W / 900;
-  const nr = NODE_R * scale;
-
-  // Glow for winner
-  if (isWinner) drawGlow(x, y, nr, GOLD);
-
-  // Circle
-  ctx.beginPath();
-  ctx.arc(x, y, nr, 0, Math.PI*2);
-  ctx.fillStyle = isTBD ? '#1a1a1a' : (isWinner ? '#2a1f00' : '#1c1c1c');
-  ctx.fill();
-  ctx.strokeStyle = isWinner ? GOLD : (isTBD ? '#2a2a2a' : sc);
-  ctx.lineWidth = isWinner ? 2.5 * scale : 1.5 * scale;
-  ctx.stroke();
-
-  // Flag emoji
-  if (!isTBD) {
-    ctx.font = `${Math.round(nr * 1.1)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(team.flag, x, y + 1);
+  if (opts.pair) {
+    // Two flags side by side in one circle
+    const c = document.createElement('div');
+    c.className = `circle-pair ${opts.pairSize || 'sz-pair-md'} ${statusClass(m)}`;
+    if (!isTBD) {
+      c.innerHTML = `<span class="flag-half">${m.f1}</span><span class="flag-half">${m.f2}</span>`;
+    } else {
+      c.innerHTML = `<span style="font-size:0.7rem;color:#333">TBD</span>`;
+    }
+    el.appendChild(c);
   } else {
-    ctx.font = `bold ${Math.round(nr * 0.9)}px Inter, sans-serif`;
-    ctx.fillStyle = '#333';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('?', x, y + 1);
+    // Single team
+    const team = opts.team === 1 ? { f: m.f1, n: m.n1 } : { f: m.f2, n: m.n2 };
+    const isWinner = (opts.team === 1 && m.w === 1) || (opts.team === 2 && m.w === 2);
+    const c = document.createElement('div');
+    c.className = `circle ${opts.size || 'sz-lg'} ${isWinner ? 'status-winner' : statusClass(m)}`;
+    c.textContent = team.f;
+    el.appendChild(c);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'node-label' + (isWinner ? ' gold' : (team.n === 'TBD' ? ' muted' : ''));
+    lbl.textContent = team.n.length > 12 ? team.n.slice(0,11)+'…' : team.n;
+    el.appendChild(lbl);
   }
 
-  // Name label (outside the ring)
-  const labelR = ringR + nr + 14 * scale;
-  // Angle from center to this node
-  const angleDeg = Math.atan2(y - CY, x - CX) * 180 / Math.PI;
-  const lp = pt(CX, CY, labelR, angleDeg);
-
-  // Determine text anchor based on quadrant
-  const isRight = lp.x > CX;
-  ctx.textAlign = isRight ? 'left' : 'right';
-  ctx.textBaseline = 'middle';
-  ctx.font = `${Math.round(10 * scale)}px Inter, sans-serif`;
-  ctx.fillStyle = isTBD ? '#333' : (isWinner ? GOLD : WHITE);
-
-  const shortName = team.name.length > 11 ? team.name.slice(0,10)+'…' : team.name;
-  ctx.fillText(shortName, lp.x + (isRight ? 4*scale : -4*scale), lp.y);
+  scene.appendChild(el);
+  return el;
 }
 
-function drawConnector(x1, y1, x2, y2, color) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  // Curved line toward center then out
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
-  // Pull midpoint slightly toward center
-  const pull = 0.85;
-  const pmx = CX + (mx - CX) * pull;
-  const pmy = CY + (my - CY) * pull;
-  ctx.quadraticCurveTo(pmx, pmy, x2, y2);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+function makeLine(x1, y1, x2, y2, color='#1e1e1e', width=1.2) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', width);
+  svg.appendChild(line);
 }
 
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  hitZones = [];
-  const scale = W / 900;
+function makeCurve(x1, y1, x2, y2, color='#1e1e1e', width=1.2) {
+  const size = scene.offsetWidth;
+  const cx   = size / 2, cy = size / 2;
+  // Pull control point toward center
+  const mx = (x1+x2)/2, my = (y1+y2)/2;
+  const pull = 0.7;
+  const cpx = cx + (mx-cx)*pull;
+  const cpy = cy + (my-cy)*pull;
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', `M${x1},${y1} Q${cpx},${cpy} ${x2},${y2}`);
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', width);
+  path.setAttribute('fill', 'none');
+  svg.appendChild(path);
+}
 
-  // Background gradient
-  const bg = ctx.createRadialGradient(CX, CY, 0, CX, CY, W * 0.5);
-  bg.addColorStop(0, '#1a1500');
-  bg.addColorStop(0.3, '#0f0f0f');
-  bg.addColorStop(1, '#080808');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+function build() {
+  scene.querySelectorAll('.node,.trophy-node').forEach(e=>e.remove());
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-  // Ring guide lines (subtle)
-  RINGS.slice(0, 4).forEach(r => {
-    ctx.beginPath();
-    ctx.arc(CX, CY, r * scale, 0, Math.PI * 2);
-    ctx.strokeStyle = '#1e1e1e';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+  const size = scene.offsetWidth;
+  const cx = size/2, cy = size/2;
+
+  // ── R32: 16 matches, each has 2 team nodes slightly offset either side ──
+  const r32pts  = [];  // midpoints of each r32 match at the outer ring
+  const r16pts  = [];
+  const qfpts   = [];
+  const sfpts   = [];
+
+  const HALF_SPAN = 6.5; // degrees between team1 and team2 of same match
+
+  for (let i = 0; i < 16; i++) {
+    const ang  = matchCentreAngle(i);
+    const p1   = polar(RADII.r32, ang - HALF_SPAN);
+    const p2   = polar(RADII.r32, ang + HALF_SPAN);
+    const mid  = polar(RADII.r32, ang);
+    r32pts.push(mid);
+
+    // Connecting arc between the two team nodes (short line)
+    makeLine(p1.x, p1.y, p2.x, p2.y, '#252525', 1);
+
+    makeNode(i, p1.x, p1.y, { team:1, size:'sz-lg' });
+    makeNode(i, p2.x, p2.y, { team:2, size:'sz-lg' });
+  }
+
+  // ── R16: 8 pair nodes, each between 2 adjacent R32 matches ──
+  for (let i = 0; i < 8; i++) {
+    const matchId = 16 + i;
+    const angA   = matchCentreAngle(i * 2);
+    const angB   = matchCentreAngle(i * 2 + 1);
+    const midAng = (angA + angB) / 2;
+    const p      = polar(RADII.r16, midAng);
+    r16pts.push(p);
+
+    // Lines from r32 mid to r16 node
+    makeCurve(r32pts[i*2].x,   r32pts[i*2].y,   p.x, p.y);
+    makeCurve(r32pts[i*2+1].x, r32pts[i*2+1].y, p.x, p.y);
+
+    makeNode(matchId, p.x, p.y, { pair:true, pairSize:'sz-pair-md' });
+  }
+
+  // ── QF: 4 pair nodes ──
+  for (let i = 0; i < 4; i++) {
+    const matchId = 24 + i;
+    const angs = [0,1,2,3].map(j => matchCentreAngle(i*4 + j));
+    const midAng = angs.reduce((a,b)=>a+b,0)/4;
+    const p = polar(RADII.qf, midAng);
+    qfpts.push(p);
+
+    makeCurve(r16pts[i*2].x,   r16pts[i*2].y,   p.x, p.y);
+    makeCurve(r16pts[i*2+1].x, r16pts[i*2+1].y, p.x, p.y);
+
+    makeNode(matchId, p.x, p.y, { pair:true, pairSize:'sz-pair-sm' });
+  }
+
+  // ── SF: 2 pair nodes ──
+  for (let i = 0; i < 2; i++) {
+    const matchId = 28 + i;
+    const angs = [0,1,2,3,4,5,6,7].map(j => matchCentreAngle(i*8 + j));
+    const midAng = angs.reduce((a,b)=>a+b,0)/8;
+    const p = polar(RADII.sf, midAng);
+    sfpts.push(p);
+
+    makeCurve(qfpts[i*2].x,   qfpts[i*2].y,   p.x, p.y);
+    makeCurve(qfpts[i*2+1].x, qfpts[i*2+1].y, p.x, p.y);
+
+    makeNode(matchId, p.x, p.y, { pair:true, pairSize:'sz-pair-xs' });
+  }
+
+  // ── Lines from SF to center ──
+  sfpts.forEach(p => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg','line');
+    path.setAttribute('x1',p.x); path.setAttribute('y1',p.y);
+    path.setAttribute('x2',cx);  path.setAttribute('y2',cy);
+    path.setAttribute('stroke','#3a2e10');
+    path.setAttribute('stroke-width','1.5');
+    svg.appendChild(path);
   });
 
-  // Draw spoke lines connecting rounds (background layer)
-  // R32 → R16 → QF → SF → center
-  for (let i = 0; i < 16; i++) {
-    const ang = matchAngle(i);
-    // Two team positions per match (team1 slightly ccw, team2 slightly cw)
-    const halfSpan = 5.5; // degrees half-span between the two teams
-    const angT1 = ang - halfSpan;
-    const angT2 = ang + halfSpan;
-
-    const r32t1 = pt(CX, CY, RINGS[0] * scale, angT1);
-    const r32t2 = pt(CX, CY, RINGS[0] * scale, angT2);
-    const r32mid = pt(CX, CY, RINGS[0] * scale, ang);
-    const r16    = pt(CX, CY, RINGS[1] * scale, ang);
-    const qf     = pt(CX, CY, RINGS[2] * scale, ang);
-    const sf     = pt(CX, CY, RINGS[3] * scale, ang);
-
-    // Team1 to team2 arc connector at R32 ring
-    ctx.beginPath();
-    ctx.arc(CX, CY, RINGS[0] * scale, toRad(angT1 - 90) + Math.PI/2, toRad(angT2 - 90) + Math.PI/2);
-    // Just draw a line between them instead
-    ctx.beginPath();
-    ctx.moveTo(r32t1.x, r32t1.y);
-    ctx.lineTo(r32t2.x, r32t2.y);
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // R32 mid → R16
-    ctx.beginPath();
-    ctx.moveTo(r32mid.x, r32mid.y);
-    ctx.lineTo(r16.x, r16.y);
-    ctx.strokeStyle = '#1d1d1d';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // R16 → QF (every 2 matches pair up)
-    if (i % 2 === 0) {
-      const ang2   = matchAngle(i + 1);
-      const midAng = (ang + ang2) / 2;
-      const qfPos  = pt(CX, CY, RINGS[2] * scale, midAng);
-      const r16a   = pt(CX, CY, RINGS[1] * scale, ang);
-      const r16b   = pt(CX, CY, RINGS[1] * scale, ang2);
-      ctx.beginPath(); ctx.moveTo(r16a.x, r16a.y); ctx.lineTo(qfPos.x, qfPos.y);
-      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(r16b.x, r16b.y); ctx.lineTo(qfPos.x, qfPos.y);
-      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
-
-      // QF → SF (every 4 matches → 1 SF)
-      if (i % 4 === 0) {
-        const angC   = matchAngle(i + 2);
-        const angD   = matchAngle(i + 3);
-        const midSF  = (ang + ang2 + angC + angD) / 4;
-        const sfPos  = pt(CX, CY, RINGS[3] * scale, midSF);
-        const qfA    = pt(CX, CY, RINGS[2] * scale, (ang + ang2) / 2);
-        const qfB    = pt(CX, CY, RINGS[2] * scale, (angC + angD) / 2);
-        ctx.beginPath(); ctx.moveTo(qfA.x, qfA.y); ctx.lineTo(sfPos.x, sfPos.y);
-        ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(qfB.x, qfB.y); ctx.lineTo(sfPos.x, sfPos.y);
-        ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1; ctx.stroke();
-
-        // SF → center gold line
-        ctx.beginPath();
-        ctx.moveTo(sfPos.x, sfPos.y);
-        ctx.lineTo(CX, CY);
-        ctx.strokeStyle = GOLDDIM;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-    }
-  }
-
-  // Draw R32 nodes (16 matches × 2 teams = 32 nodes)
-  for (let i = 0; i < 16; i++) {
-    const m = MATCHES[i];
-    const ang = matchAngle(i);
-    const halfSpan = 5.5;
-    const p1 = pt(CX, CY, RINGS[0] * scale, ang - halfSpan);
-    const p2 = pt(CX, CY, RINGS[0] * scale, ang + halfSpan);
-    drawTeamNode(p1.x, p1.y, m, true,  RINGS[0] * scale);
-    drawTeamNode(p2.x, p2.y, m, false, RINGS[0] * scale);
-
-    // Hit zone on the midpoint between the two nodes
-    const mid = pt(CX, CY, RINGS[0] * scale, ang);
-    hitZones.push({ matchId: m.id, x: mid.x, y: mid.y, r: NODE_R * scale * 2.2 });
-  }
-
-  // Draw R16 nodes
-  for (let i = 0; i < 8; i++) {
-    const m = MATCHES[16 + i];
-    // R16 match i corresponds to R32 matches i*2 and i*2+1
-    const angA = matchAngle(i * 2);
-    const angB = matchAngle(i * 2 + 1);
-    const midAng = (angA + angB) / 2;
-    const p = pt(CX, CY, RINGS[1] * scale, midAng);
-    drawSingleNode(p.x, p.y, m, RINGS[1] * scale);
-    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
-  }
-
-  // Draw QF nodes
-  for (let i = 0; i < 4; i++) {
-    const m = MATCHES[24 + i];
-    const baseMatch = i * 4;
-    const angs = [0,1,2,3].map(j => matchAngle(baseMatch + j));
-    const midAng = angs.reduce((a,b)=>a+b,0) / 4;
-    const p = pt(CX, CY, RINGS[2] * scale, midAng);
-    drawSingleNode(p.x, p.y, m, RINGS[2] * scale);
-    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
-  }
-
-  // Draw SF nodes
-  for (let i = 0; i < 2; i++) {
-    const m = MATCHES[28 + i];
-    const baseMatch = i * 8;
-    const angs = [0,1,2,3,4,5,6,7].map(j => matchAngle(baseMatch + j));
-    const midAng = angs.reduce((a,b)=>a+b,0) / 8;
-    const p = pt(CX, CY, RINGS[3] * scale, midAng);
-    drawSingleNode(p.x, p.y, m, RINGS[3] * scale);
-    hitZones.push({ matchId: m.id, x: p.x, y: p.y, r: NODE_R * scale * 1.8 });
-  }
-
-  // Trophy center
-  drawTrophyCenter(scale);
-
-  // Final hit zone (center)
-  hitZones.push({ matchId: 30, x: CX, y: CY, r: 42 * scale });
+  // ── Trophy center ──
+  const trophy = document.createElement('div');
+  trophy.className = 'trophy-node';
+  trophy.style.left = cx + 'px';
+  trophy.style.top  = cy + 'px';
+  trophy.innerHTML  = `<div class="trophy-circle">🏆</div>`;
+  trophy.onclick    = () => openModal(30);
+  scene.appendChild(trophy);
 }
 
-function drawSingleNode(x, y, m, ringR) {
-  const scale = W / 900;
-  const nr = NODE_R * 0.82 * scale;
-  const sc = statusColor(m);
-  const isTBD = m.n1 === 'TBD' && m.n2 === 'TBD';
-  const isWinner = m.winner !== null;
-
-  if (isWinner) drawGlow(x, y, nr, GOLD);
-
-  ctx.beginPath();
-  ctx.arc(x, y, nr, 0, Math.PI * 2);
-  ctx.fillStyle = isTBD ? '#141414' : '#1c1c1c';
-  ctx.fill();
-  ctx.strokeStyle = isTBD ? '#252525' : sc;
-  ctx.lineWidth = 1.5 * scale;
-  ctx.stroke();
-
-  // Show flags or dots
-  if (!isTBD) {
-    ctx.font = `${Math.round(nr * 0.85)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(m.t1, x - nr * 0.45, y + 1);
-    ctx.fillText(m.t2, x + nr * 0.45, y + 1);
-  } else {
-    ctx.beginPath();
-    ctx.arc(x, y, nr * 0.25, 0, Math.PI * 2);
-    ctx.fillStyle = '#2a2a2a';
-    ctx.fill();
-  }
-}
-
-function drawTrophyCenter(scale) {
-  const r = 40 * scale;
-
-  // Outer ring
-  ctx.beginPath();
-  ctx.arc(CX, CY, r, 0, Math.PI * 2);
-  const gr = ctx.createRadialGradient(CX, CY, 0, CX, CY, r);
-  gr.addColorStop(0, '#2a1e00');
-  gr.addColorStop(1, '#110e00');
-  ctx.fillStyle = gr;
-  ctx.fill();
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 2 * scale;
-  ctx.stroke();
-
-  // Trophy emoji
-  ctx.font = `${Math.round(30 * scale)}px serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🏆', CX, CY + 1);
-
-  // Glow
-  drawGlow(CX, CY, r, GOLD);
-}
-
-// ═══════════════════════════════════════════════════════
-//  CLICK HANDLING
-// ═══════════════════════════════════════════════════════
-canvas.addEventListener('click', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  // Scale for device pixel ratio
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const cx = mx * scaleX;
-  const cy = my * scaleY;
-
-  for (const z of hitZones) {
-    const dx = cx - z.x, dy = cy - z.y;
-    if (dx*dx + dy*dy <= z.r*z.r) {
-      openModal(z.matchId);
-      return;
-    }
-  }
+// ── Rebuild on resize ──
+let rTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(rTimer);
+  rTimer = setTimeout(build, 120);
 });
 
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top)  * (canvas.height / rect.height);
-  let hit = false;
-  for (const z of hitZones) {
-    const dx = mx - z.x, dy = my - z.y;
-    if (dx*dx + dy*dy <= z.r*z.r) { hit = true; break; }
-  }
-  canvas.style.cursor = hit ? 'pointer' : 'default';
-});
+// Wait for fonts + layout then build
+document.fonts.ready.then(build);
 
 // ═══════════════════════════════════════════════════════
-//  MODAL
+// MODAL
 // ═══════════════════════════════════════════════════════
 function openModal(id) {
-  const m = MATCHES.find(x => x.id === id);
-  if (!m) return;
-
-  document.getElementById('mRound').textContent  = m.round;
-  document.getElementById('mFlag1').textContent  = m.t1;
-  document.getElementById('mFlag2').textContent  = m.t2;
-  document.getElementById('mName1').textContent  = m.n1;
-  document.getElementById('mName2').textContent  = m.n2;
-
-  const n1el = document.getElementById('mName1');
-  const n2el = document.getElementById('mName2');
-  n1el.className = 'modal-tname' + (m.winner===1 ? ' winner-name' : '');
-  n2el.className = 'modal-tname' + (m.winner===2 ? ' winner-name' : '');
-
-  const hasScore = m.s1 !== null && m.s2 !== null;
-  document.getElementById('mScore').textContent = hasScore ? `${m.s1} — ${m.s2}` : '– vs –';
-  document.getElementById('mDate').textContent  = m.date;
-  document.getElementById('mVenue').textContent = m.venue;
-
-  const badge = document.getElementById('mBadge');
-  if (hasScore) {
-    badge.textContent = 'Full Time'; badge.className = 'badge badge-done';
-  } else if (m.n1 === 'TBD') {
-    badge.textContent = 'Not Yet Set'; badge.className = 'badge badge-tbd';
-  } else {
-    badge.textContent = 'Upcoming'; badge.className = 'badge badge-upcoming';
-  }
-
+  const m = M[id];
+  document.getElementById('mRound').textContent = m.r;
+  document.getElementById('mF1').textContent    = m.f1;
+  document.getElementById('mF2').textContent    = m.f2;
+  document.getElementById('mN1').textContent    = m.n1;
+  document.getElementById('mN2').textContent    = m.n2;
+  document.getElementById('mN1').className = 'modal-tname' + (m.w===1?' w':'');
+  document.getElementById('mN2').className = 'modal-tname' + (m.w===2?' w':'');
+  const hasScore = m.s1 !== null;
+  document.getElementById('mScore').textContent  = hasScore ? `${m.s1} — ${m.s2}` : '– vs –';
+  document.getElementById('mDate').textContent   = m.date;
+  document.getElementById('mVenue').textContent  = m.venue;
+  const b = document.getElementById('mBadge');
+  if (hasScore)             { b.textContent='Full Time';    b.className='badge b-done'; }
+  else if (m.n1==='TBD')   { b.textContent='Not Yet Set';  b.className='badge b-tbd'; }
+  else                      { b.textContent='Upcoming';     b.className='badge b-upcoming'; }
   document.getElementById('overlay').classList.add('open');
 }
-
-function closeModal() {
-  document.getElementById('overlay').classList.remove('open');
-}
-
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 document.getElementById('overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
+  if (e.target===e.currentTarget) closeModal();
 });
-
-// Init
-window.addEventListener('resize', resize);
-resize();
 </script>
 </body>
 </html>
