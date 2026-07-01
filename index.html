@@ -181,22 +181,24 @@ function flagUrl(key, w=80) {
 // (e.g. COD beat UZB to earn slot 7; ARG beat JOR to earn slot 13)
 // ─────────────────────────────────────────────────────────────
 const SLOTS = [
-  {a:'RSA', b:'CAN'},  // 0  — South Africa vs Canada
-  {a:'BRA', b:'JPN'},  // 1  — Brazil vs Japan
-  {a:'GER', b:'PAR'},  // 2  — Germany vs Paraguay
-  {a:'NED', b:'MAR'},  // 3  — Netherlands vs Morocco (draw→pens TBD)
-  {a:'CIV', b:'NOR'},  // 4  — Ivory Coast vs Norway
-  {a:'FRA', b:'SWE'},  // 5  — France vs Sweden
-  {a:'MEX', b:'ECU'},  // 6  — Mexico vs Ecuador
-  {a:'ENG', b:'COD'},  // 7  — England vs Congo DR (COD beat UZB in prelim)
-  {a:'BEL', b:'SEN'},  // 8  — Belgium vs Senegal
-  {a:'USA', b:'BIH'},  // 9  — USA vs Bosnia & Herz.
-  {a:'ESP', b:'AUT'},  // 10 — Spain vs Austria (note: DZA drew AUT in prelim, AUT advances)
-  {a:'POR', b:'CRO'},  // 11 — Portugal vs Croatia
-  {a:'SUI', b:'DZA'},  // 12 — Switzerland vs Algeria
-  {a:'ARG', b:'CPV'},  // 13 — Argentina vs Cape Verde (ARG beat JOR in prelim)
-  {a:'COL', b:'GHA'},  // 14 — Colombia vs Ghana
-  {a:'CAN', b:'MAR'},  // 15 — Canada vs Morocco (CAN beat RSA; MAR drew NED)
+  // RIGHT half (slots 0-7, top clockwise)
+  {a:'RSA', b:'CAN'},  // 0  South Africa vs Canada         — CAN won 1-0
+  {a:'BRA', b:'JPN'},  // 1  Brazil vs Japan                 — BRA won 2-1
+  {a:'GER', b:'PAR'},  // 2  Germany vs Paraguay             — Draw 1-1 (pens TBD)
+  {a:'NED', b:'MAR'},  // 3  Netherlands vs Morocco          — Draw 1-1 (pens TBD)
+  {a:'CIV', b:'NOR'},  // 4  Ivory Coast vs Norway           — NOR won 2-1
+  {a:'FRA', b:'SWE'},  // 5  France vs Sweden                — FRA won 3-0
+  {a:'MEX', b:'ECU'},  // 6  Mexico vs Ecuador               — MEX won 2-0
+  {a:'ENG', b:'COD'},  // 7  England vs Congo DR             — ENG won 2-1
+  // LEFT half (slots 8-15, bottom-left clockwise)
+  {a:'BEL', b:'SEN'},  // 8  Belgium vs Senegal              — upcoming
+  {a:'USA', b:'BIH'},  // 9  USA vs Bosnia & Herz.           — upcoming
+  {a:'ESP', b:'AUT'},  // 10 Spain vs Austria                — upcoming
+  {a:'POR', b:'CRO'},  // 11 Portugal vs Croatia             — upcoming
+  {a:'SUI', b:'DZA'},  // 12 Switzerland vs Algeria          — upcoming
+  {a:'AUS', b:'EGY'},  // 13 Australia vs Egypt              — upcoming
+  {a:'ARG', b:'CPV'},  // 14 Argentina vs Cape Verde         — upcoming
+  {a:'COL', b:'GHA'},  // 15 Colombia vs Ghana               — upcoming
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -226,31 +228,87 @@ function normalizeGame(homeAbbr, awayAbbr, homeName, awayName,
            date: localStart || '', venue: venue || '' };
 }
 
-// No live API available in standalone HTML — data comes from INITIAL_GAMES snapshot.
-// To get fresh data, re-download this file from Claude (it embeds the latest scores).
+// Fetch live scores via Anthropic API with the sports tool
+// Works when served from claude.ai (API key injected automatically)
 async function fetchGames() {
-  throw new Error('Standalone mode — using snapshot only');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      tools: [{
+        type: 'custom',
+        name: 'fetch_sports_data',
+        description: 'Fetch live sports scores and standings',
+        input_schema: {
+          type: 'object',
+          properties: {
+            league:    { type: 'string' },
+            data_type: { type: 'string' }
+          },
+          required: ['league','data_type']
+        }
+      }],
+      messages: [{
+        role: 'user',
+        content: 'Call fetch_sports_data with league="world_cup" and data_type="scores". Then respond with ONLY a raw JSON array (no markdown fences, no explanation) of every match, each object: {"homeAbbr":"XXX","awayAbbr":"XXX","homeName":"...","awayName":"...","homeScore":N_or_null,"awayScore":N_or_null,"status":"final|in_progress|scheduled","winProbHome":N_or_null,"winProbAway":N_or_null,"date":"...","venue":"..."}'
+      }]
+    })
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const data = await res.json();
+
+  // The model may respond with tool_use + text in multiple turns.
+  // We only need the final text block that contains the JSON array.
+  const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+  const text = textBlocks.join('');
+  const clean = text.replace(/```json|```/g,'').trim();
+
+  // Find the JSON array even if surrounded by prose
+  const arrStart = clean.indexOf('[');
+  const arrEnd   = clean.lastIndexOf(']');
+  if (arrStart === -1 || arrEnd === -1) throw new Error('No JSON array in response: ' + clean.slice(0,200));
+  const games = JSON.parse(clean.slice(arrStart, arrEnd+1));
+  if (!Array.isArray(games) || !games.length) throw new Error('Empty games array');
+  return games;
 }
 
 // ── Baked-in snapshot — renders instantly, then API overwrites ──
 // Last updated from live sports tool. Keys match SLOTS exactly.
 const INITIAL_GAMES = [
-  {homeAbbr:'RSA',awayAbbr:'CAN',homeName:'South Africa',awayName:'Canada',        homeScore:0,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Sun Jun 28, 2:00 PM CDT', venue:'SoFi Stadium, Los Angeles'},
-  {homeAbbr:'BRA',awayAbbr:'JPN',homeName:'Brazil',      awayName:'Japan',          homeScore:2,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 12:00 PM CDT',venue:'NRG Stadium, Houston'},
-  {homeAbbr:'GER',awayAbbr:'PAR',homeName:'Germany',     awayName:'Paraguay',       homeScore:1,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 3:30 PM CDT', venue:'Gillette Stadium, Foxborough'},
-  {homeAbbr:'NED',awayAbbr:'MAR',homeName:'Netherlands', awayName:'Morocco',        homeScore:1,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 8:00 PM CDT', venue:'Estadio BBVA, Monterrey'},
-  {homeAbbr:'CIV',awayAbbr:'NOR',homeName:'Ivory Coast', awayName:'Norway',         homeScore:1,awayScore:2,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 12:00 PM CDT',venue:'AT&T Stadium, Arlington'},
-  {homeAbbr:'FRA',awayAbbr:'SWE',homeName:'France',      awayName:'Sweden',         homeScore:3,awayScore:0,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 4:00 PM CDT', venue:'MetLife Stadium, New Jersey'},
-  {homeAbbr:'MEX',awayAbbr:'ECU',homeName:'Mexico',      awayName:'Ecuador',        homeScore:2,awayScore:0,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 9:00 PM CDT', venue:'Estadio Azteca, Mexico City'},
-  {homeAbbr:'ENG',awayAbbr:'COD',homeName:'England',     awayName:'Congo DR',       homeScore:null,awayScore:null,status:'scheduled',winProbHome:75.2,winProbAway:7.6,  date:'Wed Jul 1, 11:00 AM CDT',venue:'Mercedes-Benz Stadium, Atlanta'},
-  {homeAbbr:'BEL',awayAbbr:'SEN',homeName:'Belgium',     awayName:'Senegal',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:44.6,winProbAway:26.5, date:'Wed Jul 1, 3:00 PM CDT', venue:'Lumen Field, Seattle'},
-  {homeAbbr:'USA',awayAbbr:'BIH',homeName:'USA',         awayName:'Bosnia & Herz.', homeScore:null,awayScore:null,status:'scheduled',winProbHome:69.4,winProbAway:11.7, date:'Wed Jul 1, 7:00 PM CDT', venue:"Levi's Stadium, Santa Clara"},
-  {homeAbbr:'ESP',awayAbbr:'AUT',homeName:'Spain',       awayName:'Austria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:72.9,winProbAway:9.5,  date:'Thu Jul 2, 2:00 PM CDT', venue:'SoFi Stadium, Los Angeles'},
-  {homeAbbr:'POR',awayAbbr:'CRO',homeName:'Portugal',    awayName:'Croatia',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:53.5,winProbAway:19.5, date:'Thu Jul 2, 6:00 PM CDT', venue:'BMO Field, Toronto'},
-  {homeAbbr:'SUI',awayAbbr:'DZA',homeName:'Switzerland', awayName:'Algeria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:47.2,winProbAway:23.6, date:'Thu Jul 2, 10:00 PM CDT',venue:'BC Place, Vancouver'},
-  {homeAbbr:'ARG',awayAbbr:'CPV',homeName:'Argentina',   awayName:'Cape Verde',     homeScore:null,awayScore:null,status:'scheduled',winProbHome:83.2,winProbAway:4.8,  date:'Fri Jul 3, 5:00 PM CDT', venue:'Hard Rock Stadium, Miami'},
-  {homeAbbr:'COL',awayAbbr:'GHA',homeName:'Colombia',    awayName:'Ghana',          homeScore:null,awayScore:null,status:'scheduled',winProbHome:63.6,winProbAway:13.2, date:'Fri Jul 3, 8:30 PM CDT', venue:'Arrowhead Stadium, Kansas City'},
-  {homeAbbr:'CAN',awayAbbr:'MAR',homeName:'Canada',      awayName:'Morocco',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:20.2,winProbAway:52.5, date:'Sat Jul 4, 12:00 PM CDT',venue:'NRG Stadium, Houston'},
+  // slot 0: RSA vs CAN
+  {homeAbbr:'RSA',awayAbbr:'CAN',homeName:'South Africa',awayName:'Canada',        homeScore:0, awayScore:1, status:'final',     winProbHome:null, winProbAway:null, date:'Sun Jun 28, 2:00 PM CDT',  venue:'SoFi Stadium, Los Angeles'},
+  // slot 1: BRA vs JPN
+  {homeAbbr:'BRA',awayAbbr:'JPN',homeName:'Brazil',      awayName:'Japan',          homeScore:2, awayScore:1, status:'final',     winProbHome:null, winProbAway:null, date:'Mon Jun 29, 12:00 PM CDT', venue:'NRG Stadium, Houston'},
+  // slot 2: GER vs PAR — draw, pens TBD
+  {homeAbbr:'GER',awayAbbr:'PAR',homeName:'Germany',     awayName:'Paraguay',       homeScore:1, awayScore:1, status:'final',     winProbHome:null, winProbAway:null, date:'Mon Jun 29, 3:30 PM CDT',  venue:'Gillette Stadium, Foxborough'},
+  // slot 3: NED vs MAR — draw, pens TBD
+  {homeAbbr:'NED',awayAbbr:'MAR',homeName:'Netherlands', awayName:'Morocco',        homeScore:1, awayScore:1, status:'final',     winProbHome:null, winProbAway:null, date:'Mon Jun 29, 8:00 PM CDT',  venue:'Estadio BBVA, Monterrey'},
+  // slot 4: CIV vs NOR
+  {homeAbbr:'CIV',awayAbbr:'NOR',homeName:'Ivory Coast', awayName:'Norway',         homeScore:1, awayScore:2, status:'final',     winProbHome:null, winProbAway:null, date:'Tue Jun 30, 12:00 PM CDT', venue:'AT&T Stadium, Arlington'},
+  // slot 5: FRA vs SWE
+  {homeAbbr:'FRA',awayAbbr:'SWE',homeName:'France',      awayName:'Sweden',         homeScore:3, awayScore:0, status:'final',     winProbHome:null, winProbAway:null, date:'Tue Jun 30, 4:00 PM CDT',  venue:'MetLife Stadium, New Jersey'},
+  // slot 6: MEX vs ECU
+  {homeAbbr:'MEX',awayAbbr:'ECU',homeName:'Mexico',      awayName:'Ecuador',        homeScore:2, awayScore:0, status:'final',     winProbHome:null, winProbAway:null, date:'Tue Jun 30, 9:00 PM CDT',  venue:'Estadio Azteca, Mexico City'},
+  // slot 7: ENG vs COD
+  {homeAbbr:'ENG',awayAbbr:'COD',homeName:'England',     awayName:'Congo DR',       homeScore:2, awayScore:1, status:'final',     winProbHome:null, winProbAway:null, date:'Wed Jul 1, 11:00 AM CDT',  venue:'Mercedes-Benz Stadium, Atlanta'},
+  // slot 8: BEL vs SEN
+  {homeAbbr:'BEL',awayAbbr:'SEN',homeName:'Belgium',     awayName:'Senegal',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:45.7,winProbAway:26.3,date:'Wed Jul 1, 3:00 PM CDT',  venue:'Lumen Field, Seattle'},
+  // slot 9: USA vs BIH
+  {homeAbbr:'USA',awayAbbr:'BIH',homeName:'USA',         awayName:'Bosnia & Herz.', homeScore:null,awayScore:null,status:'scheduled',winProbHome:71.2,winProbAway:10.9,date:'Wed Jul 1, 7:00 PM CDT',  venue:"Levi's Stadium, Santa Clara"},
+  // slot 10: ESP vs AUT
+  {homeAbbr:'ESP',awayAbbr:'AUT',homeName:'Spain',       awayName:'Austria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:72.9,winProbAway:9.5, date:'Thu Jul 2, 2:00 PM CDT',  venue:'SoFi Stadium, Los Angeles'},
+  // slot 11: POR vs CRO
+  {homeAbbr:'POR',awayAbbr:'CRO',homeName:'Portugal',    awayName:'Croatia',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:53.5,winProbAway:19.5,date:'Thu Jul 2, 6:00 PM CDT',  venue:'BMO Field, Toronto'},
+  // slot 12: SUI vs DZA
+  {homeAbbr:'SUI',awayAbbr:'DZA',homeName:'Switzerland', awayName:'Algeria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:47.2,winProbAway:23.6,date:'Thu Jul 2, 10:00 PM CDT', venue:'BC Place, Vancouver'},
+  // slot 13: AUS vs EGY
+  {homeAbbr:'AUS',awayAbbr:'EGY',homeName:'Australia',   awayName:'Egypt',          homeScore:null,awayScore:null,status:'scheduled',winProbHome:28.5,winProbAway:38.4,date:'Fri Jul 3, 1:00 PM CDT',  venue:'AT&T Stadium, Dallas'},
+  // slot 14: ARG vs CPV
+  {homeAbbr:'ARG',awayAbbr:'CPV',homeName:'Argentina',   awayName:'Cape Verde',     homeScore:null,awayScore:null,status:'scheduled',winProbHome:83.7,winProbAway:4.6, date:'Fri Jul 3, 5:00 PM CDT',  venue:'Hard Rock Stadium, Miami'},
+  // slot 15: COL vs GHA
+  {homeAbbr:'COL',awayAbbr:'GHA',homeName:'Colombia',    awayName:'Ghana',          homeScore:null,awayScore:null,status:'scheduled',winProbHome:63.6,winProbAway:13.2,date:'Fri Jul 3, 8:30 PM CDT',  venue:'Arrowhead Stadium, Kansas City'},
 ];
 
 // R16+ fixed schedule (teams filled by propagate())
@@ -573,15 +631,13 @@ function scheduleNext(ms) {
 let rTimer;
 window.addEventListener('resize', ()=>{ clearTimeout(rTimer); rTimer=setTimeout(build,120); });
 document.fonts.ready.then(() => {
+  // Render snapshot immediately so bracket is never blank
   buildFromAPI(INITIAL_GAMES);
   build();
   loader.style.display = 'none';
-  const now = new Date();
-  const hasLive = MATCHES.slice(0,16).some(m => m.status === 'live');
-  const liveText = hasLive ? ' · <span class="live-badge">⬤ LIVE</span>' : '';
-  statusBar.innerHTML = '<span class="ok">Data as of ' +
-    now.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
-    ' · Re-download for updates' + liveText + '</span>';
+  statusBar.innerHTML = '<span class="ok">Loading live data…</span>';
+  // Then fetch live data in background and keep refreshing
+  refresh(false);
 });
 
 // ─────────────────────────────────────────────────────────────
