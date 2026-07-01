@@ -6,202 +6,77 @@
 <title>World Cup 2026</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
-  :root {
-    --gold: #c9a84c;
-    --gold-dim: #5a4520;
-    --bg: #0d0d0d;
-    --text: #e0e0e0;
-    --muted: #555;
-  }
+  :root { --gold:#c9a84c; --gold-dim:#5a4520; --bg:#0d0d0d; --text:#e0e0e0; --muted:#555; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 60px;
-  }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding-bottom:60px; }
   header { text-align:center; padding:28px 20px 12px; }
-  header h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem,5vw,3.2rem);
-    letter-spacing: 6px;
-    color: var(--gold);
-    line-height: 1;
-  }
-  header p { font-size:.65rem; letter-spacing:4px; color:var(--muted); margin-top:5px; text-transform:uppercase; }
+  header h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,5vw,3.2rem); letter-spacing:6px; color:var(--gold); line-height:1; }
+  header p  { font-size:.65rem; letter-spacing:4px; color:var(--muted); margin-top:5px; text-transform:uppercase; }
+  #statusBar { font-size:.55rem; letter-spacing:2px; color:#444; margin-top:5px; text-transform:uppercase; min-height:14px; }
+  #statusBar .ok  { color:#555; }
+  #statusBar .err { color:#a33; }
+  #statusBar .live-badge { color:#e03c3c; animation:blink 1.2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  .last-update {
-    font-size:.55rem; letter-spacing:2px; color:#333; margin-top:4px;
-    text-transform:uppercase;
-  }
-  .last-update span { color:#555; }
+  .bracket-scene { position:relative; width:min(860px,96vw); height:min(860px,96vw); margin:0 auto; }
+  .center-glow { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:70%; height:70%; background:radial-gradient(ellipse at center, rgba(201,168,76,.20) 0%, rgba(201,168,76,.07) 30%, rgba(201,168,76,.02) 55%, transparent 72%); border-radius:50%; pointer-events:none; z-index:0; }
+  .lines-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
 
-  .bracket-scene {
-    position: relative;
-    width: min(860px, 96vw);
-    height: min(860px, 96vw);
-    margin: 0 auto;
-  }
-  .center-glow {
-    position:absolute; top:50%; left:50%;
-    transform:translate(-50%,-50%);
-    width:70%; height:70%;
-    background: radial-gradient(ellipse at center,
-      rgba(201,168,76,0.20) 0%, rgba(201,168,76,0.07) 30%,
-      rgba(201,168,76,0.02) 55%, transparent 72%);
-    border-radius:50%; pointer-events:none; z-index:0;
-  }
-  .lines-svg {
-    position:absolute; inset:0; width:100%; height:100%;
-    pointer-events:none; z-index:1;
-  }
-
-  /* ── Team node (outer ring) ── */
-  .team-node {
-    position:absolute; transform:translate(-50%,-50%);
-    display:flex; flex-direction:column; align-items:center; gap:3px;
-    cursor:pointer; z-index:10;
-  }
-  .team-circle {
-    width:42px; height:42px; border-radius:50%; overflow:hidden;
-    border:2px solid #2a2a2a;
-    transition:transform .18s, border-color .18s, box-shadow .18s;
-    background:#161616;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .team-node:hover .team-circle { transform:scale(1.12); border-color:var(--gold); box-shadow:0 0 12px rgba(201,168,76,0.4); }
+  .team-node { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; z-index:10; }
+  .team-circle { width:42px; height:42px; border-radius:50%; overflow:hidden; border:2px solid #2a2a2a; transition:transform .18s,border-color .18s,box-shadow .18s; background:#161616; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .team-node:hover .team-circle { transform:scale(1.12); border-color:var(--gold); box-shadow:0 0 12px rgba(201,168,76,.4); }
   .team-circle img { width:100%; height:100%; object-fit:cover; display:block; }
-  .team-label {
-    font-size:.5rem; font-weight:600; color:var(--muted);
-    white-space:nowrap; letter-spacing:.3px; text-align:center;
-    max-width:68px; overflow:hidden; text-overflow:ellipsis;
-    line-height:1.2; pointer-events:none;
-  }
+  .team-label { font-size:.5rem; font-weight:600; color:var(--muted); white-space:nowrap; letter-spacing:.3px; text-align:center; max-width:68px; overflow:hidden; text-overflow:ellipsis; line-height:1.2; pointer-events:none; }
   .winner-lbl { color:var(--gold) !important; }
 
-  /* ── Winner advancement node (R_WIN) ── */
-  .winner-node {
-    position:absolute; transform:translate(-50%,-50%);
-    cursor:pointer; z-index:10;
-  }
-  .winner-circle {
-    width:26px; height:26px; border-radius:50%; overflow:hidden;
-    border:1.5px solid #2a2a2a;
-    background:#0e0c08;
-    display:flex; align-items:center; justify-content:center;
-    transition:transform .18s, border-color .18s, box-shadow .18s;
-  }
-  .winner-circle.known {
-    border-color:var(--gold);
-    box-shadow:0 0 7px rgba(201,168,76,0.35);
-  }
-  .winner-node:hover .winner-circle {
-    transform:scale(1.18);
-    border-color:var(--gold);
-    box-shadow:0 0 12px rgba(201,168,76,0.5);
-  }
+  .winner-node { position:absolute; transform:translate(-50%,-50%); cursor:pointer; z-index:10; }
+  .winner-circle { width:26px; height:26px; border-radius:50%; overflow:hidden; border:1.5px solid #2a2a2a; background:#0e0c08; display:flex; align-items:center; justify-content:center; transition:transform .18s,border-color .18s,box-shadow .18s; }
+  .winner-circle.known { border-color:var(--gold); box-shadow:0 0 7px rgba(201,168,76,.35); }
+  .winner-node:hover .winner-circle { transform:scale(1.18); border-color:var(--gold); box-shadow:0 0 12px rgba(201,168,76,.5); }
   .winner-circle img { width:100%; height:100%; object-fit:cover; display:block; }
 
-  /* ── TBD opponent node (R_OPP) ── */
-  .opp-node {
-    position:absolute; transform:translate(-50%,-50%);
-    cursor:pointer; z-index:10;
-  }
-  .opp-circle {
-    width:14px; height:14px; border-radius:50%;
-    border:1px solid #252010;
-    background:#0a0906;
-    display:flex; align-items:center; justify-content:center;
-    transition:transform .18s, border-color .18s;
-  }
+  .opp-node { position:absolute; transform:translate(-50%,-50%); cursor:pointer; z-index:10; }
+  .opp-circle { width:14px; height:14px; border-radius:50%; border:1px solid #252010; background:#0a0906; display:flex; align-items:center; justify-content:center; transition:transform .18s,border-color .18s; }
   .opp-node:hover .opp-circle { transform:scale(1.25); border-color:var(--gold); }
   .opp-circle .tbd-q { font-size:.38rem; color:#3a3020; }
 
-  /* ── Inner match node (R16 / QF / SF / Final) ── */
-  .match-node {
-    position:absolute; transform:translate(-50%,-50%);
-    cursor:pointer; z-index:10;
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-  }
-  .match-dot {
-    border-radius:50%;
-    border:1.5px solid #3a3020;
-    background:#0e0c08;
-    display:flex; align-items:center; justify-content:center;
-    transition:transform .18s, border-color .18s, box-shadow .18s;
-    flex-shrink:0; overflow:hidden;
-  }
-  .match-node:hover .match-dot { transform:scale(1.2); border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.35); }
+  .match-node { position:absolute; transform:translate(-50%,-50%); cursor:pointer; z-index:10; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .match-dot { border-radius:50%; border:1.5px solid #3a3020; background:#0e0c08; display:flex; align-items:center; justify-content:center; transition:transform .18s,border-color .18s,box-shadow .18s; flex-shrink:0; overflow:hidden; }
+  .match-node:hover .match-dot { transform:scale(1.2); border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,.35); }
   .match-dot img { width:100%; height:100%; object-fit:cover; display:block; }
   .match-dot.tbd { border-color:#252010; background:#0a0906; }
   .match-dot .tbd-q { font-size:.4rem; color:#3a3020; }
-  .match-dot.has-winner { border-color:var(--gold); box-shadow:0 0 6px rgba(201,168,76,0.25); }
-
+  .match-dot.has-winner { border-color:var(--gold); box-shadow:0 0 6px rgba(201,168,76,.25); }
   .sz-r16 .match-dot { width:22px; height:22px; }
   .sz-qf  .match-dot { width:18px; height:18px; }
   .sz-sf  .match-dot { width:15px; height:15px; }
 
-  /* status rings on outer teams */
   .s-done    .team-circle { border-color:#4caf50; }
-  .s-winner  .team-circle { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,0.4); }
+  .s-winner  .team-circle { border-color:var(--gold); box-shadow:0 0 10px rgba(201,168,76,.4); }
   .s-upcoming .team-circle { border-color:#4a7fd4; }
   .s-live    .team-circle { border-color:#e03c3c; animation:pulse 1s infinite; }
   .s-tbd     .team-circle { border-color:#1e1e1e; }
-  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(224,60,60,0.5); } 50%{ box-shadow:0 0 0 3px rgba(224,60,60,0); } }
+  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(224,60,60,.5); } 50%{ box-shadow:0 0 0 3px rgba(224,60,60,0); } }
 
-  /* score tag */
-  .score-tag {
-    font-family:'Bebas Neue',sans-serif; font-size:.68rem; color:var(--gold);
-    letter-spacing:1.5px; pointer-events:none;
-    position:absolute; transform:translate(-50%,-50%);
-    z-index:11; white-space:nowrap;
-    text-shadow:0 1px 4px rgba(0,0,0,0.95);
-  }
+  .score-tag { font-family:'Bebas Neue',sans-serif; font-size:.68rem; color:var(--gold); letter-spacing:1.5px; pointer-events:none; position:absolute; transform:translate(-50%,-50%); z-index:11; white-space:nowrap; text-shadow:0 1px 4px rgba(0,0,0,.95); }
 
-  /* ── Trophy ── */
-  .trophy-node {
-    position:absolute; transform:translate(-50%,-50%); z-index:20; cursor:pointer;
-  }
-  .trophy-wrap {
-    width:96px; height:96px; border-radius:50%;
-    background:radial-gradient(circle at 45% 38%, #3a2600, #1a1100 55%, #060400);
-    border:1.5px solid rgba(201,168,76,0.55);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 0 0 1px rgba(201,168,76,0.12),
-               0 0 28px rgba(201,168,76,0.45),
-               0 0 70px rgba(201,168,76,0.18),
-               0 0 120px rgba(201,168,76,0.07);
-    transition:transform .2s, box-shadow .2s; overflow:hidden;
-  }
-  .trophy-node:hover .trophy-wrap { transform:scale(1.1); box-shadow:0 0 0 1px rgba(201,168,76,0.3), 0 0 42px rgba(201,168,76,0.65), 0 0 90px rgba(201,168,76,0.28); }
-  .trophy-wrap img { width:80px; height:80px; object-fit:contain; filter:drop-shadow(0 0 10px rgba(201,168,76,0.85)) brightness(1.12) saturate(1.15); }
+  .trophy-node { position:absolute; transform:translate(-50%,-50%); z-index:20; cursor:pointer; }
+  .trophy-wrap { width:96px; height:96px; border-radius:50%; background:radial-gradient(circle at 45% 38%,#3a2600,#1a1100 55%,#060400); border:1.5px solid rgba(201,168,76,.55); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px rgba(201,168,76,.12),0 0 28px rgba(201,168,76,.45),0 0 70px rgba(201,168,76,.18),0 0 120px rgba(201,168,76,.07); transition:transform .2s,box-shadow .2s; overflow:hidden; }
+  .trophy-node:hover .trophy-wrap { transform:scale(1.1); box-shadow:0 0 0 1px rgba(201,168,76,.3),0 0 42px rgba(201,168,76,.65),0 0 90px rgba(201,168,76,.28); }
+  .trophy-wrap img { width:80px; height:80px; object-fit:contain; filter:drop-shadow(0 0 10px rgba(201,168,76,.85)) brightness(1.12) saturate(1.15); }
 
-  /* Loading */
-  .loading-state {
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:12px; color:var(--muted); font-size:.75rem; letter-spacing:2px;
-    text-transform:uppercase; height:300px;
-  }
-  .spinner {
-    width:32px; height:32px; border-radius:50%;
-    border:2px solid #222; border-top-color:var(--gold);
-    animation:spin .8s linear infinite;
-  }
+  .loading-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; z-index:50; background:rgba(13,13,13,.7); border-radius:50%; }
+  .spinner { width:32px; height:32px; border-radius:50%; border:2px solid #222; border-top-color:var(--gold); animation:spin .8s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-overlay p { font-size:.65rem; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
 
-  /* Legend */
   .legend { display:flex; gap:22px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
   .legend-item { display:flex; align-items:center; gap:6px; font-size:.62rem; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; }
   .ldot { width:8px; height:8px; border-radius:50%; }
 
-  /* Modal */
-  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:300; align-items:center; justify-content:center; padding:20px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:300; align-items:center; justify-content:center; padding:20px; }
   .overlay.open { display:flex; }
-  .modal { background:#111; border:1px solid var(--gold-dim); border-radius:14px; padding:28px; max-width:390px; width:100%; position:relative; box-shadow:0 0 50px rgba(201,168,76,0.1); }
+  .modal { background:#111; border:1px solid var(--gold-dim); border-radius:14px; padding:28px; max-width:390px; width:100%; position:relative; box-shadow:0 0 50px rgba(201,168,76,.1); }
   .modal-close { position:absolute; top:14px; right:16px; background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; }
   .modal-close:hover { color:#fff; }
   .modal-round { font-size:.58rem; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:18px; }
@@ -224,23 +99,23 @@
   .b-upcoming { background:#0d1020; color:#4a7fd4; border:1px solid #4a7fd4; }
   .b-tbd      { background:#151515; color:var(--muted); border:1px solid #333; }
   .modal-prob { margin-top:14px; font-size:.7rem; color:var(--muted); text-align:center; letter-spacing:1px; }
-  .prob-bar { display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:6px; gap:2px; }
-  .prob-seg { height:100%; border-radius:3px; }
+  .prob-bar   { display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:6px; gap:2px; }
+  .prob-seg   { height:100%; border-radius:3px; }
 </style>
 </head>
 <body>
 <header>
   <h1>World Cup 2026</h1>
   <p>Interactive Bracket — Click any team or match</p>
-  <div class="last-update" id="lastUpdate"></div>
+  <div id="statusBar"></div>
 </header>
 
 <div class="bracket-scene" id="scene">
   <div class="center-glow"></div>
   <svg class="lines-svg" id="linesSvg"></svg>
-  <div class="loading-state" id="loadingState">
+  <div class="loading-overlay" id="loader">
     <div class="spinner"></div>
-    <div>Loading live data…</div>
+    <p>Loading live data…</p>
   </div>
 </div>
 
@@ -256,18 +131,9 @@
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-round" id="mRound"></div>
     <div class="modal-teams">
-      <div class="modal-team">
-        <img class="modal-flag-img" id="mImg1" src="" alt=""/>
-        <div class="modal-tname" id="mN1"></div>
-      </div>
-      <div class="modal-scores">
-        <div class="modal-scoreline" id="mScore"></div>
-        <div class="modal-vs">VS</div>
-      </div>
-      <div class="modal-team">
-        <img class="modal-flag-img" id="mImg2" src="" alt=""/>
-        <div class="modal-tname" id="mN2"></div>
-      </div>
+      <div class="modal-team"><img class="modal-flag-img" id="mImg1" src="" alt=""/><div class="modal-tname" id="mN1"></div></div>
+      <div class="modal-scores"><div class="modal-scoreline" id="mScore"></div><div class="modal-vs">VS</div></div>
+      <div class="modal-team"><img class="modal-flag-img" id="mImg2" src="" alt=""/><div class="modal-tname" id="mN2"></div></div>
     </div>
     <hr class="md"/>
     <div class="modal-info">
@@ -284,690 +150,498 @@
 
 <script>
 // ─────────────────────────────────────────────────────────────
-// FLAG LOOKUP  (abbr → flagcdn code)
+// FLAGS
 // ─────────────────────────────────────────────────────────────
 const FLAG_CODES = {
-  // Common abbreviations from API
-  CAN:'ca', RSA:'za', BRA:'br', JPN:'jp', GER:'de', PAR:'py',
-  NED:'nl', MAR:'ma', CIV:'ci', NOR:'no', FRA:'fr', SWE:'se',
-  MEX:'mx', ECU:'ec', ENG:'gb-eng', COD:'cd',
-  BEL:'be', SEN:'sn', USA:'us', BIH:'ba',
-  ESP:'es', AUT:'at', POR:'pt', CRO:'hr',
-  SUI:'ch', DZA:'dz', ARG:'ar', CPV:'cv',
-  COL:'co', GHA:'gh', AUS:'au', EGY:'eg',
-  KSA:'sa', NZL:'nz', IRN:'ir', PAN:'pa',
-  JOR:'jo', UZB:'uz',
-  // Long names → code (fallback)
-  'Canada':'ca','South Africa':'za','Brazil':'br','Japan':'jp',
-  'Germany':'de','Paraguay':'py','Netherlands':'nl','Morocco':'ma',
-  'Ivory Coast':'ci','Norway':'no','France':'fr','Sweden':'se',
-  'Mexico':'mx','Ecuador':'ec','England':'gb-eng','DR Congo':'cd','Congo DR':'cd',
-  'Belgium':'be','Senegal':'sn','USA':'us','Bosnia and Herzegovina':'ba','Bosnia & Herz.':'ba',
-  'Spain':'es','Austria':'at','Portugal':'pt','Croatia':'hr',
-  'Switzerland':'ch','Algeria':'dz','Argentina':'ar','Cape Verde':'cv',
-  'Colombia':'co','Ghana':'gh','Australia':'au','Egypt':'eg',
-  'Saudi Arabia':'sa','New Zealand':'nz','IR Iran':'ir','Panama':'pa',
-  'Jordan':'jo','Uzbekistan':'uz',
+  CAN:'ca',RSA:'za',BRA:'br',JPN:'jp',GER:'de',PAR:'py',NED:'nl',MAR:'ma',
+  CIV:'ci',NOR:'no',FRA:'fr',SWE:'se',MEX:'mx',ECU:'ec',ENG:'gb-eng',COD:'cd',
+  BEL:'be',SEN:'sn',USA:'us',BIH:'ba',ESP:'es',AUT:'at',POR:'pt',CRO:'hr',
+  SUI:'ch',DZA:'dz',ARG:'ar',CPV:'cv',COL:'co',GHA:'gh',AUS:'au',EGY:'eg',
+  KSA:'sa',NZL:'nz',IRN:'ir',PAN:'pa',JOR:'jo',UZB:'uz',SWI:'ch',ALG:'dz',
+  // full names
+  'Canada':'ca','South Africa':'za','Brazil':'br','Japan':'jp','Germany':'de',
+  'Paraguay':'py','Netherlands':'nl','Morocco':'ma','Ivory Coast':'ci','Norway':'no',
+  'France':'fr','Sweden':'se','Mexico':'mx','Ecuador':'ec','England':'gb-eng',
+  'Congo DR':'cd','DR Congo':'cd','Belgium':'be','Senegal':'sn','USA':'us',
+  'Bosnia and Herzegovina':'ba','Bosnia & Herz.':'ba','Spain':'es','Austria':'at',
+  'Portugal':'pt','Croatia':'hr','Switzerland':'ch','Algeria':'dz','Argentina':'ar',
+  'Cape Verde':'cv','Colombia':'co','Ghana':'gh','Australia':'au','Egypt':'eg',
+  'Saudi Arabia':'sa','New Zealand':'nz','IR Iran':'ir','Panama':'pa','Jordan':'jo',
+  'Uzbekistan':'uz',
 };
-function flagUrl(nameOrCode, w=80) {
-  const c = FLAG_CODES[nameOrCode];
+function flagUrl(key, w=80) {
+  const c = FLAG_CODES[key] || FLAG_CODES[key?.toUpperCase()];
   return c ? `https://flagcdn.com/w${w}/${c}.png` : '';
 }
 
 // ─────────────────────────────────────────────────────────────
-// STATIC BRACKET DEFINITION
-// The R32 bracket order (slot positions) stays fixed.
-// These are the 16 R32 match slots in clockwise order from top.
-// Each entry: { slot: index, r16: which R16 match feeds into }
-// Venues / dates come from the API for R32, and hardcoded for R16+
+// BRACKET SLOT ORDER  (clockwise from top, 16 R32 matches)
+// Defined by the actual FIFA 2026 knockout bracket draw.
+// Each entry: home/away abbreviations as they appear in the API.
 // ─────────────────────────────────────────────────────────────
-
-// The 16 R32 match pairings in bracket order (clockwise from top)
-// These map to the angular positions 0-15
-// We define them by which API match IDs go here based on bracket draw.
-// The bracket draw order (slot 0 = top, clockwise):
-const R32_BRACKET_ORDER = [
-  // RIGHT half (slots 0-7, top to bottom-right)
-  { apiHome:'RSA', apiAway:'CAN' },   // 0 — Canada vs South Africa
-  { apiHome:'BRA', apiAway:'JPN' },   // 1 — Brazil vs Japan
-  { apiHome:'GER', apiAway:'PAR' },   // 2 — Germany vs Paraguay
-  { apiHome:'NED', apiAway:'MAR' },   // 3 — Netherlands vs Morocco
-  { apiHome:'CIV', apiAway:'NOR' },   // 4 — Ivory Coast vs Norway
-  { apiHome:'FRA', apiAway:'SWE' },   // 5 — France vs Sweden
-  { apiHome:'MEX', apiAway:'ECU' },   // 6 — Mexico vs Ecuador
-  { apiHome:'ENG', apiAway:'COD' },   // 7 — England vs Congo DR
-  // LEFT half (slots 8-15, bottom-left to top-left)
-  { apiHome:'BEL', apiAway:'SEN' },   // 8 — Belgium vs Senegal
-  { apiHome:'USA', apiAway:'BIH' },   // 9 — USA vs Bosnia
-  { apiHome:'ESP', apiAway:'AUT' },   // 10 — Spain vs Austria
-  { apiHome:'COL', apiAway:'POR' },   // 11 — Colombia vs Portugal (draw)
-  { apiHome:'SUI', apiAway:'DZA' },   // 12 — Switzerland vs Algeria
-  { apiHome:'ARG', apiAway:'JOR' },   // 13 — Argentina vs Jordan (API has JOR/ARG reversed, home/away might differ)
-  { apiHome:'CRO', apiAway:'GHA' },   // 14 — Croatia vs Ghana
-  { apiHome:'AUS', apiAway:'EGY' },   // 15 — Australia vs Egypt
+const SLOTS = [
+  {a:'RSA',b:'CAN'}, // 0
+  {a:'BRA',b:'JPN'}, // 1
+  {a:'GER',b:'PAR'}, // 2
+  {a:'NED',b:'MAR'}, // 3
+  {a:'CIV',b:'NOR'}, // 4
+  {a:'FRA',b:'SWE'}, // 5
+  {a:'MEX',b:'ECU'}, // 6
+  {a:'ENG',b:'COD'}, // 7  — England vs Congo DR (R32 proper)
+  {a:'BEL',b:'SEN'}, // 8  (or NZL/BEL — filled from API)
+  {a:'USA',b:'BIH'}, // 9
+  {a:'ESP',b:'AUT'}, // 10
+  {a:'POR',b:'COL'}, // 11
+  {a:'SUI',b:'DZA'}, // 12
+  {a:'ARG',b:'JOR'}, // 13
+  {a:'CRO',b:'GHA'}, // 14
+  {a:'AUS',b:'EGY'}, // 15
 ];
 
-// R16+ static match info (venues/dates don't change, teams TBD from winners)
-const LATER_ROUNDS = [
-  // R16 (ids 16-23)
-  {id:16, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 4 · 1:00 PM CDT",  venue:"NRG Stadium, Houston"},
-  {id:17, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 4 · 5:00 PM CDT",  venue:"Lincoln Financial Field, Philadelphia"},
-  {id:18, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 5 · 4:00 PM CDT",  venue:"MetLife Stadium, New Jersey"},
-  {id:19, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 5 · 8:00 PM CDT",  venue:"Estadio Azteca, Mexico City"},
-  {id:20, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 6 · 5:00 PM CDT",  venue:"Hard Rock Stadium, Miami"},
-  {id:21, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 6 · 9:00 PM CDT",  venue:"Arrowhead Stadium, Kansas City"},
-  {id:22, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 7 · 5:00 PM CDT",  venue:"Levi's Stadium, Santa Clara"},
-  {id:23, r:"Round of 16",   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 7 · 9:00 PM CDT",  venue:"AT&T Stadium, Dallas"},
-  // QF (ids 24-27)
-  {id:24, r:"Quarter-Final", n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 11 · 4:00 PM CDT", venue:"Gillette Stadium, Boston"},
-  {id:25, r:"Quarter-Final", n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 11 · 8:00 PM CDT", venue:"SoFi Stadium, Los Angeles"},
-  {id:26, r:"Quarter-Final", n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 12 · 5:00 PM CDT", venue:"Hard Rock Stadium, Miami"},
-  {id:27, r:"Quarter-Final", n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 12 · 9:00 PM CDT", venue:"Arrowhead Stadium, Kansas City"},
-  // SF (ids 28-29)
-  {id:28, r:"Semi-Final",    n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 15 · 3:00 PM CDT", venue:"AT&T Stadium, Dallas"},
-  {id:29, r:"Semi-Final",    n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 16 · 3:00 PM CDT", venue:"Mercedes-Benz Stadium, Atlanta"},
-  // Final (id 30)
-  {id:30, r:"🏆 Final",      n1:'TBD',n2:'TBD',s1:null,s2:null,w:null, date:"Jul 19 · 3:00 PM CDT", venue:"MetLife Stadium, New Jersey"},
+// R16+ fixed schedule (teams filled by propagate())
+const LATER = [
+  {id:16,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 4 · 1:00 PM CDT', venue:'NRG Stadium, Houston'},
+  {id:17,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 4 · 5:00 PM CDT', venue:'Lincoln Financial, Philadelphia'},
+  {id:18,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 5 · 4:00 PM CDT', venue:'MetLife Stadium, New Jersey'},
+  {id:19,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 5 · 8:00 PM CDT', venue:'Estadio Azteca, Mexico City'},
+  {id:20,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 6 · 5:00 PM CDT', venue:'Hard Rock Stadium, Miami'},
+  {id:21,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 6 · 9:00 PM CDT', venue:'Arrowhead Stadium, Kansas City'},
+  {id:22,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 7 · 5:00 PM CDT', venue:"Levi's Stadium, Santa Clara"},
+  {id:23,r:'Round of 16',   n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 7 · 9:00 PM CDT', venue:'AT&T Stadium, Dallas'},
+  {id:24,r:'Quarter-Final', n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 11 · 4:00 PM CDT',venue:'Gillette Stadium, Boston'},
+  {id:25,r:'Quarter-Final', n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 11 · 8:00 PM CDT',venue:'SoFi Stadium, Los Angeles'},
+  {id:26,r:'Quarter-Final', n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 12 · 5:00 PM CDT',venue:'Hard Rock Stadium, Miami'},
+  {id:27,r:'Quarter-Final', n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 12 · 9:00 PM CDT',venue:'Arrowhead Stadium, Kansas City'},
+  {id:28,r:'Semi-Final',    n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 15 · 3:00 PM CDT',venue:'AT&T Stadium, Dallas'},
+  {id:29,r:'Semi-Final',    n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 16 · 3:00 PM CDT',venue:'Mercedes-Benz Stadium, Atlanta'},
+  {id:30,r:'🏆 Final',      n1:'TBD',n2:'TBD',s1:null,s2:null,w:null,status:'tbd',date:'Jul 19 · 3:00 PM CDT',venue:'MetLife Stadium, New Jersey'},
 ];
 
 // ─────────────────────────────────────────────────────────────
-// LIVE DATA FETCHER
+// LIVE FETCH  — ESPN (CORS open, no key)
+// Normalised output: array of { homeAbbr, awayAbbr, homeName,
+//   awayName, homeScore, awayScore, winner, isDone, isLive,
+//   winProb, date, venue }
 // ─────────────────────────────────────────────────────────────
-let MATCHES = [];
-let fetchController = null;
-
-// ── Live data via allsports.api or cors-proxy wrapping the same
-// sport radar feed that the Claude tool uses ──────────────────
-// We try multiple CORS-accessible endpoints in order.
-
-async function fetchLiveData() {
-  // Strategy: try a series of CORS-open endpoints.
-  // 1. allsports.api (free, no key needed for WC)
-  // 2. cors-proxy → api.sportradar (same source as Claude tool)
-  // 3. api.football-data.org (free tier, no key for WC)
-
-  // Endpoint 1: allsportsapi.com free World Cup feed
-  try {
-    const url = 'https://apiv3.apifootball.com/?action=get_events&from=2026-06-01&to=2026-07-20&league_id=1&APIkey=test_key_worldcup2026';
-    // This key won't work — skip to endpoint 2
-  } catch(e) {}
-
-  // Endpoint 2: ESPN public API (CORS open, no key)
-  try {
-    const res = await fetch(
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
-      { signal: AbortSignal.timeout(6000) }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const parsed = parseESPN(data);
-      if (parsed.length) return parsed;
+async function fetchFromESPN() {
+  const res = await fetch(
+    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
+    { signal: AbortSignal.timeout(8000), cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`ESPN ${res.status}`);
+  const d = await res.json();
+  const events = d.events || [];
+  if (!events.length) throw new Error('ESPN empty');
+  return events.map(ev => {
+    const comp = ev.competitions?.[0] || {};
+    const cx   = comp.competitors || [];
+    const home = cx.find(c => c.homeAway==='home') || cx[0] || {};
+    const away = cx.find(c => c.homeAway==='away') || cx[1] || {};
+    const sn   = ev.status?.type?.name || '';
+    const isDone = sn==='STATUS_FINAL';
+    const isLive = sn==='STATUS_IN_PROGRESS'||sn==='STATUS_HALFTIME';
+    const hs = (isDone||isLive) ? +home.score : null;
+    const as = (isDone||isLive) ? +away.score : null;
+    let w = null;
+    if (isDone && hs!==null) w = hs>as ? 1 : as>hs ? 2 : 0;
+    let prob = null;
+    const pred = comp.predictor;
+    if (pred && !isDone) {
+      const hp = pred.homeTeam?.gameProjection;
+      const ap = pred.awayTeam?.gameProjection;
+      if (hp && ap) prob = { home: Math.round(hp), away: Math.round(ap) };
     }
-  } catch(e) { console.warn('ESPN failed:', e.message); }
-
-  // Endpoint 3: corsproxy.io wrapping the sportradar-style data
-  // (same data Claude's tool reads, just proxied)
-  try {
-    const target = encodeURIComponent(
-      'https://worldcupjson.net/matches?status=in_progress'
-    );
-    const res = await fetch(`https://corsproxy.io/?${target}`,
-      { signal: AbortSignal.timeout(6000) }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      return parseWorldCupJson(data);
-    }
-  } catch(e) { console.warn('wcjson failed:', e.message); }
-
-  // Endpoint 4: cors-proxied full match list from worldcupjson
-  try {
-    const target = encodeURIComponent('https://worldcupjson.net/matches');
-    const res = await fetch(`https://corsproxy.io/?${target}`,
-      { signal: AbortSignal.timeout(6000) }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      return parseWorldCupJson(data);
-    }
-  } catch(e) { console.warn('wcjson full failed:', e.message); }
-
-  return null;
-}
-
-// ── Parse ESPN scoreboard format ─────────────────────────────
-function parseESPN(data) {
-  const events = data.events || [];
-  const result = [];
-  for (const ev of events) {
-    const comp = ev.competitions?.[0];
-    if (!comp) continue;
-    const comps = comp.competitors || [];
-    const home = comps.find(c => c.homeAway === 'home');
-    const away = comps.find(c => c.homeAway === 'away');
-    if (!home || !away) continue;
-    const statusName = ev.status?.type?.name || '';
-    const isDone = statusName === 'STATUS_FINAL';
-    const isLive = statusName === 'STATUS_IN_PROGRESS' || statusName === 'STATUS_HALFTIME';
-    const homeScore = (isDone||isLive) ? parseInt(home.score||0) : null;
-    const awayScore = (isDone||isLive) ? parseInt(away.score||0) : null;
-    let win = null;
-    if (isDone) { win = homeScore>awayScore ? 1 : awayScore>homeScore ? 2 : 0; }
-    const d = new Date(ev.date);
-    result.push({
-      homeAbbr: home.team?.abbreviation||'',
-      awayAbbr: away.team?.abbreviation||'',
-      homeName: home.team?.displayName||'',
-      awayName: away.team?.displayName||'',
-      homeScore, awayScore, winner:win, isDone, isLive,
-      date: d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
-            ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}),
+    const dt = new Date(ev.date);
+    return {
+      homeAbbr: home.team?.abbreviation || '',
+      awayAbbr: away.team?.abbreviation || '',
+      homeName: home.team?.displayName   || '',
+      awayName: away.team?.displayName   || '',
+      homeScore: hs, awayScore: as, winner: w, isDone, isLive, prob,
+      date:  dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+             ' · ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}),
       venue: comp.venue?.fullName || '',
-    });
-  }
-  return result;
+    };
+  });
 }
 
-// ── Parse worldcupjson.net format ────────────────────────────
-// Returns same normalized shape as parseESPN
-function parseWorldCupJson(data) {
-  // data is array of match objects or {matches:[...]}
+async function fetchFromWorldCupJson() {
+  const target = encodeURIComponent('https://worldcupjson.net/matches');
+  const res = await fetch(`https://corsproxy.io/?${target}`,
+    { signal: AbortSignal.timeout(8000), cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`wcjson ${res.status}`);
+  const data = await res.json();
   const matches = Array.isArray(data) ? data : (data.matches || []);
-  const result = [];
-  for (const m of matches) {
-    const status = (m.status||'').toLowerCase(); // 'in progress','completed','future'
-    const isDone = status === 'completed';
-    const isLive = status === 'in progress';
-    const hs = m.home_team?.goals ?? null;
-    const as = m.away_team?.goals ?? null;
-    const homeScore = (isDone||isLive) ? Number(hs) : null;
-    const awayScore = (isDone||isLive) ? Number(as) : null;
-    let win = null;
-    if (isDone && homeScore!==null) {
-      win = homeScore>awayScore ? 1 : awayScore>homeScore ? 2 : 0;
-    }
-    const d = m.datetime ? new Date(m.datetime) : null;
-    result.push({
+  if (!matches.length) throw new Error('wcjson empty');
+  return matches.map(m => {
+    const status = (m.status||'').toLowerCase();
+    const isDone = status==='completed';
+    const isLive = status==='in progress';
+    const hs = (isDone||isLive) ? Number(m.home_team?.goals) : null;
+    const as = (isDone||isLive) ? Number(m.away_team?.goals) : null;
+    let w = null;
+    if (isDone && hs!==null) w = hs>as ? 1 : as>hs ? 2 : 0;
+    const dt = m.datetime ? new Date(m.datetime) : null;
+    return {
       homeAbbr: (m.home_team?.code||'').toUpperCase(),
       awayAbbr: (m.away_team?.code||'').toUpperCase(),
-      homeName: m.home_team?.country||'',
-      awayName: m.away_team?.country||'',
-      homeScore, awayScore, winner:win, isDone, isLive,
-      date: d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
-                ' · ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '',
-      venue: m.venue||'',
-    });
-  }
-  return result;
-}
-
-// ─────────────────────────────────────────────────────────────
-// BUILD MATCHES ARRAY from live data
-// ─────────────────────────────────────────────────────────────
-
-// Embedded snapshot data (auto-updated when live fetch works)
-// This represents the latest known state as a fallback
-const EMBEDDED_R32 = [
-  // slot 0: South Africa vs Canada — Canada won 1-0
-  { n1:'South Africa', n2:'Canada',              s1:0,   s2:1,   w:2,   date:'Jun 28 · 2:00 PM CDT',  venue:'SoFi Stadium, Los Angeles',        prob:null, status:'final' },
-  // slot 1: Brazil vs Japan — LIVE (Japan leading 0-1)
-  { n1:'Brazil',       n2:'Japan',               s1:0,   s2:1,   w:null, date:'Jun 29 · 12:00 PM CDT', venue:'NRG Stadium, Houston',             prob:null, status:'live' },
-  // slot 2: Germany vs Paraguay
-  { n1:'Germany',      n2:'Paraguay',            s1:null,s2:null,w:null, date:'Jun 29 · 3:30 PM CDT',  venue:'Gillette Stadium, Foxborough',     prob:[72,18,10], status:'scheduled' },
-  // slot 3: Netherlands vs Morocco
-  { n1:'Netherlands',  n2:'Morocco',             s1:null,s2:null,w:null, date:'Jun 29 · 8:00 PM CDT',  venue:'Estadio BBVA, Monterrey',          prob:[43,30,27], status:'scheduled' },
-  // slot 4: Ivory Coast vs Norway
-  { n1:'Ivory Coast',  n2:'Norway',              s1:null,s2:null,w:null, date:'Jun 30 · 12:00 PM CDT', venue:'AT&T Stadium, Arlington',          prob:[26,27,47], status:'scheduled' },
-  // slot 5: France vs Sweden
-  { n1:'France',       n2:'Sweden',              s1:null,s2:null,w:null, date:'Jun 30 · 4:00 PM CDT',  venue:'MetLife Stadium, New Jersey',      prob:[77,14,9],  status:'scheduled' },
-  // slot 6: Mexico vs Ecuador
-  { n1:'Mexico',       n2:'Ecuador',             s1:null,s2:null,w:null, date:'Jun 30 · 8:00 PM CDT',  venue:'Estadio Azteca, Mexico City',      prob:[43,32,25], status:'scheduled' },
-  // slot 7: England vs Congo DR
-  { n1:'England',      n2:'Congo DR',            s1:null,s2:null,w:null, date:'Jul 1 · 11:00 AM CDT',  venue:'Mercedes-Benz Stadium, Atlanta',   prob:[76,16,8],  status:'scheduled' },
-  // slot 8: Belgium vs Senegal
-  { n1:'Belgium',      n2:'Senegal',             s1:null,s2:null,w:null, date:'Jul 1 · 3:00 PM CDT',   venue:'Lumen Field, Seattle',             prob:[44,29,26], status:'scheduled' },
-  // slot 9: USA vs Bosnia & Herz.
-  { n1:'USA',          n2:'Bosnia & Herz.',      s1:null,s2:null,w:null, date:'Jul 1 · 7:00 PM CDT',   venue:"Levi's Stadium, Santa Clara",      prob:[72,18,10], status:'scheduled' },
-  // slot 10: Spain vs Austria
-  { n1:'Spain',        n2:'Austria',             s1:null,s2:null,w:null, date:'Jul 2 · 2:00 PM CDT',   venue:'SoFi Stadium, Los Angeles',        prob:[74,17,9],  status:'scheduled' },
-  // slot 11: Portugal vs Colombia (draw 0-0)
-  { n1:'Portugal',     n2:'Colombia',            s1:0,   s2:0,   w:0,   date:'Jun 27 · 6:30 PM CDT',  venue:'BMO Field, Toronto',               prob:null, status:'final' },
-  // slot 12: Switzerland vs Algeria
-  { n1:'Switzerland',  n2:'Algeria',             s1:null,s2:null,w:null, date:'Jul 2 · 8:00 PM CDT',   venue:'BC Place, Vancouver',              prob:null, status:'scheduled' },
-  // slot 13: Argentina vs Jordan (Argentina won 3-1)
-  { n1:'Argentina',    n2:'Jordan',              s1:3,   s2:1,   w:1,   date:'Jun 27 · 9:00 PM CDT',  venue:'Hard Rock Stadium, Miami',         prob:null, status:'final' },
-  // slot 14: Croatia vs Ghana (Croatia won 2-1)
-  { n1:'Croatia',      n2:'Ghana',               s1:2,   s2:1,   w:1,   date:'Jun 27 · 4:00 PM CDT',  venue:'Arrowhead Stadium, Kansas City',   prob:null, status:'final' },
-  // slot 15: Australia vs Egypt
-  { n1:'Australia',    n2:'Egypt',               s1:null,s2:null,w:null, date:'Jul 3 · 9:30 PM CDT',   venue:'AT&T Stadium, Dallas',             prob:null, status:'scheduled' },
-];
-
-function buildMatchesFromEmbedded() {
-  MATCHES = [];
-  // R32
-  EMBEDDED_R32.forEach((m, i) => {
-    MATCHES.push({ id:i, r:'Round of 32', ...m });
+      homeName: m.home_team?.country || '',
+      awayName: m.away_team?.country || '',
+      homeScore: hs, awayScore: as, winner: w, isDone, isLive, prob: null,
+      date: dt ? dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+                  ' · ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '',
+      venue: m.venue || '',
+    };
   });
-  // R16+
-  LATER_ROUNDS.forEach(m => MATCHES.push({...m}));
-  propagate();
 }
 
-// Update R32 slots from live API data (handles ESPN + worldcupjson shapes)
-function mergeESPNData(games) {
-  if (!games || !games.length) return;
-
-  for (let slot = 0; slot < 16; slot++) {
-    const emb = EMBEDDED_R32[slot];
-    // Match by abbreviation OR by name substring
-    const game = games.find(g => {
-      const haAbbr = [g.homeAbbr, g.awayAbbr];
-      const bkt = R32_BRACKET_ORDER[slot];
-      if (haAbbr.includes(bkt.apiHome) && haAbbr.includes(bkt.apiAway)) return true;
-      // worldcupjson uses 3-letter country codes that may differ; fall back to name
-      const names = [g.homeName.toLowerCase(), g.awayName.toLowerCase()];
-      return names.some(n => emb.n1.toLowerCase().startsWith(n.slice(0,4))) &&
-             names.some(n => emb.n2.toLowerCase().startsWith(n.slice(0,4)));
-    });
-    if (!game) continue;
-
-    const m = MATCHES[slot];
-    if (game.isDone || game.isLive) {
-      m.s1     = game.homeScore;
-      m.s2     = game.awayScore;
-      m.w      = game.isDone ? game.winner : null; // no winner while live
-      m.status = game.isLive ? 'live' : 'final';
-    } else {
-      m.s1 = null; m.s2 = null; m.w = null;
-      m.status = 'scheduled';
+// Try ESPN first, then worldcupjson; both must explicitly throw on
+// failure so refresh() never silently keeps half-stale state.
+async function fetchGames() {
+  try {
+    return await fetchFromESPN();
+  } catch(e1) {
+    console.warn('ESPN failed, trying fallback:', e1.message);
+    try {
+      return await fetchFromWorldCupJson();
+    } catch(e2) {
+      console.warn('Fallback also failed:', e2.message);
+      throw new Error('All sources failed');
     }
-    if (game.date)  m.date  = game.date;
-    if (game.venue) m.venue = game.venue;
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MATCHES STATE  — rebuilt entirely from API each refresh
+// Never falls back to stale data; just shows last good state
+// ─────────────────────────────────────────────────────────────
+let MATCHES = [];   // filled by buildFromAPI()
+let lastGoodGames = null;  // cache of last successful API response
+
+function buildFromAPI(games) {
+  // games = full normalized array from fetchGames()
+  // We map each bracket slot to the right game by abbr match
+  MATCHES = [];
+
+  for (let i = 0; i < 16; i++) {
+    const slot = SLOTS[i];
+    // Find the game — try both home/away orderings
+    const g = games.find(g =>
+      (g.homeAbbr===slot.a && g.awayAbbr===slot.b) ||
+      (g.homeAbbr===slot.b && g.awayAbbr===slot.a) ||
+      // ESPN sometimes uses different abbreviations — name fallback
+      (matchesSlotByName(g, slot))
+    );
+
+    if (g) {
+      // Normalise so n1=home, n2=away (as listed in API)
+      const flipped = g.homeAbbr===slot.b; // API has them reversed vs our slot def
+      MATCHES.push({
+        id: i, r: 'Round of 32',
+        n1: g.homeName, n2: g.awayName,
+        s1: g.homeScore, s2: g.awayScore,
+        w:  g.winner,   // 1=home(n1) wins, 2=away(n2) wins, 0=draw, null=upcoming
+        status: g.isLive ? 'live' : g.isDone ? 'final' : 'upcoming',
+        prob: g.prob,
+        date: g.date, venue: g.venue,
+      });
+    } else {
+      // Game not in API yet (future / not fetched) — placeholder
+      MATCHES.push({
+        id: i, r: 'Round of 32',
+        n1: abbrToName(slot.a), n2: abbrToName(slot.b),
+        s1: null, s2: null, w: null, status: 'upcoming', prob: null,
+        date: 'TBD', venue: 'TBD',
+      });
+    }
+  }
+
+  // Append R16+ with fresh TBD state then propagate winners
+  LATER.forEach(m => MATCHES.push({ ...m }));
   propagate();
 }
 
-function winner(m) {
-  if (m.w === 1) return m.n1;
-  if (m.w === 2) return m.n2;
+// Name-based fallback matching (ESPN uses "Congo DR", API uses "COD" etc)
+const NAME_MAP = {
+  'Congo DR':'COD','DR Congo':'COD','Democratic Republic of the Congo':'COD',
+  'Ivory Coast':'CIV','Côte d\'Ivoire':'CIV','Cote dIvoire':'CIV',
+  'IR Iran':'IRN','Iran':'IRN',
+  'Bosnia and Herzegovina':'BIH','Bosnia & Herz.':'BIH','Bosnia':'BIH',
+  'Cape Verde':'CPV','Cabo Verde':'CPV',
+  'New Zealand':'NZL','Saudi Arabia':'KSA',
+  'United States':'USA','USA':'USA','South Korea':'KOR','Korea Republic':'KOR',
+};
+function matchesSlotByName(g, slot) {
+  const normalize = n => NAME_MAP[n] || n.slice(0,3).toUpperCase();
+  const ha = normalize(g.homeName), aa = normalize(g.awayName);
+  return (ha===slot.a && aa===slot.b) || (ha===slot.b && aa===slot.a);
+}
+
+// Fallback: abbreviation → readable name
+const ABBR_NAMES = {
+  RSA:'South Africa',CAN:'Canada',BRA:'Brazil',JPN:'Japan',GER:'Germany',
+  PAR:'Paraguay',NED:'Netherlands',MAR:'Morocco',CIV:'Ivory Coast',NOR:'Norway',
+  FRA:'France',SWE:'Sweden',MEX:'Mexico',ECU:'Ecuador',ENG:'England',COD:'Congo DR',
+  BEL:'Belgium',SEN:'Senegal',USA:'USA',BIH:'Bosnia & Herz.',ESP:'Spain',AUT:'Austria',
+  POR:'Portugal',CRO:'Croatia',SUI:'Switzerland',DZA:'Algeria',ARG:'Argentina',
+  CPV:'Cape Verde',COL:'Colombia',GHA:'Ghana',AUS:'Australia',EGY:'Egypt',
+  KSA:'Saudi Arabia',NZL:'New Zealand',IRN:'IR Iran',PAN:'Panama',JOR:'Jordan',UZB:'Uzbekistan',
+};
+function abbrToName(a) { return ABBR_NAMES[a] || a; }
+
+function getWinner(m) {
+  if (m.w===1) return m.n1;
+  if (m.w===2) return m.n2;
   return 'TBD';
 }
 function propagate() {
-  for (let i=0; i<8; i++) {
-    MATCHES[16+i].n1 = winner(MATCHES[i*2]);
-    MATCHES[16+i].n2 = winner(MATCHES[i*2+1]);
-  }
-  for (let i=0; i<4; i++) {
-    MATCHES[24+i].n1 = winner(MATCHES[16+i*2]);
-    MATCHES[24+i].n2 = winner(MATCHES[16+i*2+1]);
-  }
-  for (let i=0; i<2; i++) {
-    MATCHES[28+i].n1 = winner(MATCHES[24+i*2]);
-    MATCHES[28+i].n2 = winner(MATCHES[24+i*2+1]);
-  }
-  MATCHES[30].n1 = winner(MATCHES[28]);
-  MATCHES[30].n2 = winner(MATCHES[29]);
+  for (let i=0;i<8;i++){MATCHES[16+i].n1=getWinner(MATCHES[i*2]);MATCHES[16+i].n2=getWinner(MATCHES[i*2+1]);}
+  for (let i=0;i<4;i++){MATCHES[24+i].n1=getWinner(MATCHES[16+i*2]);MATCHES[24+i].n2=getWinner(MATCHES[16+i*2+1]);}
+  MATCHES[28].n1=getWinner(MATCHES[24]);MATCHES[28].n2=getWinner(MATCHES[25]);
+  MATCHES[29].n1=getWinner(MATCHES[26]);MATCHES[29].n2=getWinner(MATCHES[27]);
+  MATCHES[30].n1=getWinner(MATCHES[28]);MATCHES[30].n2=getWinner(MATCHES[29]);
 }
 
 // ─────────────────────────────────────────────────────────────
-// LAYOUT ENGINE
+// RENDERING
 // ─────────────────────────────────────────────────────────────
-const scene = document.getElementById('scene');
-const svgEl = document.getElementById('linesSvg');
-const NS    = 'http://www.w3.org/2000/svg';
-
-const R_OUT  = 0.86;
-const R_ELBOW= 0.76;
-const R_J32  = 0.68;
-const R_WIN  = 0.57;
-const R_OPP  = 0.49;
-const R_J16  = 0.41;
-const R_QF   = 0.28;
-const R_SF   = 0.16;
+const scene  = document.getElementById('scene');
+const svgEl  = document.getElementById('linesSvg');
+const NS     = 'http://www.w3.org/2000/svg';
+const R_OUT  = 0.86, R_ELBOW=0.76, R_J32=0.68, R_WIN=0.57, R_OPP=0.49, R_J16=0.41, R_QF=0.28, R_SF=0.16;
 
 function P(frac, deg) {
-  const S = scene.offsetWidth, C = S/2;
-  const r = frac * C;
-  const a = (deg - 90) * Math.PI / 180;
-  return { x: C + r*Math.cos(a), y: C + r*Math.sin(a) };
+  const S=scene.offsetWidth, C=S/2, r=frac*C, a=(deg-90)*Math.PI/180;
+  return { x:C+r*Math.cos(a), y:C+r*Math.sin(a) };
 }
-function slotAngle(s) { return s * (360/32); }
-function midAngle(a, b) {
-  let d = ((b - a) + 360) % 360;
-  return (a + d/2) % 360;
-}
+function slotAngle(s) { return s*(360/32); }
+function midAngle(a,b) { return (a + ((b-a+360)%360)/2) % 360; }
 function svgLine(x1,y1,x2,y2,col,w) {
-  const l = document.createElementNS(NS,'line');
-  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-  l.setAttribute('stroke',col); l.setAttribute('stroke-width',w);
-  l.setAttribute('stroke-linecap','round');
+  const l=document.createElementNS(NS,'line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('stroke',col);l.setAttribute('stroke-width',w);l.setAttribute('stroke-linecap','round');
   svgEl.appendChild(l);
 }
 function svgDot(x,y,r,fill) {
-  const c = document.createElementNS(NS,'circle');
-  c.setAttribute('cx',x); c.setAttribute('cy',y);
-  c.setAttribute('r',r); c.setAttribute('fill',fill);
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',r);c.setAttribute('fill',fill);
   svgEl.appendChild(c);
 }
-function place(el,x,y){ el.style.left=x+'px'; el.style.top=y+'px'; }
+function place(el,x,y){el.style.left=x+'px';el.style.top=y+'px';}
+function tbdSpan(){const s=document.createElement('span');s.className='tbd-q';s.textContent='?';return s;}
 
 function outerStatus(m, which) {
-  if (m.status === 'live') return 's-live';
-  if (m.s1 !== null && m.status === 'final') return m.w===which ? 's-winner' : 's-done';
-  if (m.s1 !== null && m.w === 0) return 's-done'; // draw
-  const n = which===1 ? m.n1 : m.n2;
+  if (m.status==='live') return 's-live';
+  if (m.status==='final') return m.w===which?'s-winner':'s-done';
+  if (m.w===0) return 's-done'; // draw
+  const n = which===1?m.n1:m.n2;
   return n==='TBD' ? 's-tbd' : 's-upcoming';
 }
 
-function makeTeamNode(name, matchId, statusClass) {
-  const el = document.createElement('div');
-  el.className = `team-node ${statusClass}`;
-  el.onclick = () => openModal(matchId);
-  const circle = document.createElement('div');
-  circle.className = 'team-circle';
-  const img = document.createElement('img');
-  img.src = flagUrl(name, 80); img.alt = name;
-  img.onerror = () => img.style.display='none';
-  circle.appendChild(img);
-  el.appendChild(circle);
-  const lbl = document.createElement('div');
-  lbl.className = 'team-label' + (statusClass==='s-winner'?' winner-lbl':'');
-  lbl.textContent = name.length>9 ? name.slice(0,8)+'…' : name;
+function makeTeamNode(name, abbr, matchId, statusClass) {
+  const el=document.createElement('div');
+  el.className=`team-node ${statusClass}`;
+  el.onclick=()=>openModal(matchId);
+  const circle=document.createElement('div');circle.className='team-circle';
+  const img=document.createElement('img');
+  img.src=flagUrl(name)||flagUrl(abbr);img.alt=name;
+  img.onerror=()=>img.style.display='none';
+  circle.appendChild(img);el.appendChild(circle);
+  const lbl=document.createElement('div');
+  lbl.className='team-label'+(statusClass==='s-winner'?' winner-lbl':'');
+  lbl.textContent=name.length>9?name.slice(0,8)+'…':name;
   el.appendChild(lbl);
   return el;
 }
 
 function makeMatchNode(matchId, szClass) {
-  const m = MATCHES[matchId];
-  const isTBD = m.n1 === 'TBD';
-  const hasWinner = m.w !== null;
-  const el = document.createElement('div');
-  el.className = `match-node ${szClass}`;
-  el.onclick = () => openModal(matchId);
-  const dot = document.createElement('div');
-  dot.className = 'match-dot' + (isTBD ? ' tbd' : '') + (hasWinner ? ' has-winner' : '');
-  if (!isTBD) {
-    const wName = winner(m);
-    if (wName !== 'TBD') {
-      const img = document.createElement('img');
-      img.src = flagUrl(wName, 40); img.alt = wName;
-      dot.appendChild(img);
-    } else {
-      dot.appendChild(tbdSpan());
-    }
-  } else {
-    dot.appendChild(tbdSpan());
-  }
-  el.appendChild(dot);
-  return el;
-}
-
-function tbdSpan() {
-  const sp = document.createElement('span');
-  sp.className = 'tbd-q'; sp.textContent = '?';
-  return sp;
+  const m=MATCHES[matchId];
+  const w=getWinner(m), isTBD=m.n1==='TBD', hasW=m.w!==null;
+  const el=document.createElement('div');el.className=`match-node ${szClass}`;
+  el.onclick=()=>openModal(matchId);
+  const dot=document.createElement('div');
+  dot.className='match-dot'+(isTBD?' tbd':'')+(hasW?' has-winner':'');
+  if (!isTBD&&w!=='TBD'){const img=document.createElement('img');img.src=flagUrl(w);img.alt=w;dot.appendChild(img);}
+  else dot.appendChild(tbdSpan());
+  el.appendChild(dot);return el;
 }
 
 function build() {
   scene.querySelectorAll('.team-node,.match-node,.trophy-node,.score-tag,.winner-node,.opp-node').forEach(e=>e.remove());
-  while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+  while(svgEl.firstChild)svgEl.removeChild(svgEl.firstChild);
+  const S=scene.offsetWidth, C=S/2;
 
-  const S = scene.offsetWidth, C = S/2;
+  const angJ32=Array.from({length:16},(_,i)=>midAngle(slotAngle(2*i),slotAngle(2*i+1)));
+  const angJ16=Array.from({length:8},(_,k)=>midAngle(angJ32[2*k],angJ32[2*k+1]));
+  const angQF =Array.from({length:4},(_,k)=>midAngle(angJ16[2*k],angJ16[2*k+1]));
+  const angSF =[midAngle(angQF[0],angQF[1]),midAngle(angQF[2],angQF[3])];
 
-  const angJ32 = Array.from({length:16}, (_,i) =>
-    midAngle(slotAngle(2*i), slotAngle(2*i+1))
-  );
-  const angJ16 = Array.from({length:8}, (_,k) =>
-    midAngle(angJ32[2*k], angJ32[2*k+1])
-  );
-  const angQF = Array.from({length:4}, (_,k) =>
-    midAngle(angJ16[2*k], angJ16[2*k+1])
-  );
-  const angSF = [
-    midAngle(angQF[0], angQF[1]),
-    midAngle(angQF[2], angQF[3])
-  ];
+  const ptT=Array.from({length:32},(_,s)=>P(R_OUT,slotAngle(s)));
+  const ptE=Array.from({length:32},(_,s)=>P(R_ELBOW,slotAngle(s)));
+  const ptJ32=angJ32.map(a=>P(R_J32,a));
+  const ptWin=angJ32.map(a=>P(R_WIN,a));
+  const ptOpp=angJ32.map(a=>P(R_OPP,a));
+  const ptJ16=angJ16.map(a=>P(R_J16,a));
+  const ptQF =angQF.map(a=>P(R_QF,a));
+  const ptSF =angSF.map(a=>P(R_SF,a));
+  const C1='#3a3118',C2='#333015',C3='#3a3820',C4='#454228',C5='#525030';
 
-  const ptTeam  = Array.from({length:32}, (_,s) => P(R_OUT,   slotAngle(s)));
-  const ptElbow = Array.from({length:32}, (_,s) => P(R_ELBOW, slotAngle(s)));
-  const ptJ32   = angJ32.map(a => P(R_J32, a));
-  const ptWin   = angJ32.map(a => P(R_WIN, a));
-  const ptOpp   = angJ32.map(a => P(R_OPP, a));
-  const ptJ16   = angJ16.map(a => P(R_J16, a));
-  const ptQF    = angQF.map(a  => P(R_QF,  a));
-  const ptSF    = angSF.map(a  => P(R_SF,  a));
-
-  const C1='#3a3118', C2='#333015', C3='#3a3820', C4='#454228', C5='#525030';
-
-  // L-shaped elbow lines: team → elbow → junction
-  for (let i=0; i<16; i++) {
-    const eA = ptElbow[2*i], eB = ptElbow[2*i+1];
-    const tA = ptTeam[2*i],  tB = ptTeam[2*i+1];
-    const jct = ptJ32[i];
-    svgLine(tA.x, tA.y, eA.x, eA.y, C1, 1.0);
-    svgLine(tB.x, tB.y, eB.x, eB.y, C1, 1.0);
-    svgLine(eA.x, eA.y, jct.x, jct.y, C1, 1.0);
-    svgLine(eB.x, eB.y, jct.x, jct.y, C1, 1.0);
-    svgDot(eA.x, eA.y, 2.0, '#6a5228');
-    svgDot(eB.x, eB.y, 2.0, '#6a5228');
-    svgDot(jct.x, jct.y, 2.5, '#7a6228');
-    svgLine(jct.x, jct.y, ptWin[i].x, ptWin[i].y, C2, 1.0);
-    svgLine(ptWin[i].x, ptWin[i].y, ptOpp[i].x, ptOpp[i].y, C2, 0.9);
+  for(let i=0;i<16;i++){
+    const eA=ptE[2*i],eB=ptE[2*i+1],tA=ptT[2*i],tB=ptT[2*i+1],j=ptJ32[i];
+    svgLine(tA.x,tA.y,eA.x,eA.y,C1,1);svgLine(tB.x,tB.y,eB.x,eB.y,C1,1);
+    svgLine(eA.x,eA.y,j.x,j.y,C1,1); svgLine(eB.x,eB.y,j.x,j.y,C1,1);
+    svgDot(eA.x,eA.y,2,'#6a5228');   svgDot(eB.x,eB.y,2,'#6a5228');
+    svgDot(j.x,j.y,2.5,'#7a6228');
+    svgLine(j.x,j.y,ptWin[i].x,ptWin[i].y,C2,1);
+    svgLine(ptWin[i].x,ptWin[i].y,ptOpp[i].x,ptOpp[i].y,C2,.9);
   }
-
-  // Opp nodes → R16
-  for (let k=0; k<8; k++) {
-    svgLine(ptOpp[2*k].x,   ptOpp[2*k].y,   ptJ16[k].x, ptJ16[k].y, C3, 1.0);
-    svgLine(ptOpp[2*k+1].x, ptOpp[2*k+1].y, ptJ16[k].x, ptJ16[k].y, C3, 1.0);
+  for(let k=0;k<8;k++){
+    svgLine(ptOpp[2*k].x,ptOpp[2*k].y,ptJ16[k].x,ptJ16[k].y,C3,1);
+    svgLine(ptOpp[2*k+1].x,ptOpp[2*k+1].y,ptJ16[k].x,ptJ16[k].y,C3,1);
   }
-
-  // R16 → QF
-  for (let k=0; k<4; k++) {
-    svgLine(ptJ16[2*k].x,   ptJ16[2*k].y,   ptQF[k].x, ptQF[k].y, C4, 1.2);
-    svgLine(ptJ16[2*k+1].x, ptJ16[2*k+1].y, ptQF[k].x, ptQF[k].y, C4, 1.2);
+  for(let k=0;k<4;k++){
+    svgLine(ptJ16[2*k].x,ptJ16[2*k].y,ptQF[k].x,ptQF[k].y,C4,1.2);
+    svgLine(ptJ16[2*k+1].x,ptJ16[2*k+1].y,ptQF[k].x,ptQF[k].y,C4,1.2);
   }
-
-  // QF → SF
-  svgLine(ptQF[0].x, ptQF[0].y, ptSF[0].x, ptSF[0].y, C5, 1.4);
-  svgLine(ptQF[1].x, ptQF[1].y, ptSF[0].x, ptSF[0].y, C5, 1.4);
-  svgLine(ptQF[2].x, ptQF[2].y, ptSF[1].x, ptSF[1].y, C5, 1.4);
-  svgLine(ptQF[3].x, ptQF[3].y, ptSF[1].x, ptSF[1].y, C5, 1.4);
-
-  // SF → center
-  svgLine(ptSF[0].x, ptSF[0].y, C, C, C5, 1.6);
-  svgLine(ptSF[1].x, ptSF[1].y, C, C, C5, 1.6);
+  svgLine(ptQF[0].x,ptQF[0].y,ptSF[0].x,ptSF[0].y,C5,1.4);
+  svgLine(ptQF[1].x,ptQF[1].y,ptSF[0].x,ptSF[0].y,C5,1.4);
+  svgLine(ptQF[2].x,ptQF[2].y,ptSF[1].x,ptSF[1].y,C5,1.4);
+  svgLine(ptQF[3].x,ptQF[3].y,ptSF[1].x,ptSF[1].y,C5,1.4);
+  svgLine(ptSF[0].x,ptSF[0].y,C,C,C5,1.6);
+  svgLine(ptSF[1].x,ptSF[1].y,C,C,C5,1.6);
 
   // Outer team nodes
-  for (let i=0; i<16; i++) {
-    const m = MATCHES[i];
-    const pA = ptTeam[2*i], pB = ptTeam[2*i+1];
-    scene.appendChild(makeTeamNode(m.n1, i, outerStatus(m,1)));
-    place(scene.lastChild, pA.x, pA.y);
-    scene.appendChild(makeTeamNode(m.n2, i, outerStatus(m,2)));
-    place(scene.lastChild, pB.x, pB.y);
-
-    // Score tag
-    if (m.s1 !== null) {
-      const jct = ptJ32[i];
-      const tx = jct.x * 0.5 + ((pA.x+pB.x)/2) * 0.5;
-      const ty = jct.y * 0.5 + ((pA.y+pB.y)/2) * 0.5;
-      const tag = document.createElement('div');
-      tag.className = 'score-tag';
-      tag.textContent = `${m.s1}–${m.s2}`;
-      tag.style.left = tx+'px'; tag.style.top = ty+'px';
+  for(let i=0;i<16;i++){
+    const m=MATCHES[i];
+    const pA=ptT[2*i],pB=ptT[2*i+1];
+    const stA=outerStatus(m,1), stB=outerStatus(m,2);
+    const nA=makeTeamNode(m.n1,SLOTS[i].a,i,stA);place(nA,pA.x,pA.y);scene.appendChild(nA);
+    const nB=makeTeamNode(m.n2,SLOTS[i].b,i,stB);place(nB,pB.x,pB.y);scene.appendChild(nB);
+    if(m.s1!==null){
+      const j=ptJ32[i],tx=j.x*.5+(pA.x+pB.x)*.25,ty=j.y*.5+(pA.y+pB.y)*.25;
+      const tag=document.createElement('div');tag.className='score-tag';
+      tag.textContent=`${m.s1}–${m.s2}`;tag.style.left=tx+'px';tag.style.top=ty+'px';
       scene.appendChild(tag);
     }
   }
 
   // Winner nodes
-  for (let i=0; i<16; i++) {
-    const m = MATCHES[i];
-    const w = winner(m);
-    const pt = ptWin[i];
-    const el = document.createElement('div');
-    el.className = 'winner-node';
-    el.style.left = pt.x+'px'; el.style.top = pt.y+'px';
-    el.onclick = () => openModal(i);
-    const circle = document.createElement('div');
-    circle.className = 'winner-circle' + (w!=='TBD' ? ' known' : '');
-    if (w !== 'TBD') {
-      const img = document.createElement('img');
-      img.src = flagUrl(w, 40); img.alt = w;
-      circle.appendChild(img);
+  for(let i=0;i<16;i++){
+    const w=getWinner(MATCHES[i]),pt=ptWin[i];
+    const el=document.createElement('div');el.className='winner-node';
+    el.style.left=pt.x+'px';el.style.top=pt.y+'px';el.onclick=()=>openModal(i);
+    const circle=document.createElement('div');
+    circle.className='winner-circle'+(w!=='TBD'?' known':'');
+    if(w!=='TBD'){const img=document.createElement('img');img.src=flagUrl(w);img.alt=w;circle.appendChild(img);}
+    else circle.appendChild(tbdSpan());
+    el.appendChild(circle);scene.appendChild(el);
+  }
+
+  // Opponent nodes
+  for(let i=0;i<16;i++){
+    const pt=ptOpp[i];
+    const el=document.createElement('div');el.className='opp-node';
+    el.style.left=pt.x+'px';el.style.top=pt.y+'px';el.onclick=()=>openModal(16+Math.floor(i/2));
+    const circle=document.createElement('div');circle.className='opp-circle';
+    circle.appendChild(tbdSpan());el.appendChild(circle);scene.appendChild(el);
+  }
+
+  // Inner round nodes
+  for(let k=0;k<8;k++){const n=makeMatchNode(16+k,'sz-r16');place(n,ptJ16[k].x,ptJ16[k].y);scene.appendChild(n);}
+  for(let k=0;k<4;k++){const n=makeMatchNode(24+k,'sz-qf');place(n,ptQF[k].x,ptQF[k].y);scene.appendChild(n);}
+  [28,29].forEach((id,i)=>{const n=makeMatchNode(id,'sz-sf');place(n,ptSF[i].x,ptSF[i].y);scene.appendChild(n);});
+
+  // Trophy
+  const trophy=document.createElement('div');trophy.className='trophy-node';
+  trophy.style.left=C+'px';trophy.style.top=C+'px';
+  trophy.innerHTML=`<div class="trophy-wrap"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/FIFA_World_Cup_2022_Qatar_Trophy.png/240px-FIFA_World_Cup_2022_Qatar_Trophy.png" alt="Trophy" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/e/ec/FIFA_World_Cup_Trophy.svg/240px-FIFA_World_Cup_Trophy.svg.png'"/></div>`;
+  trophy.onclick=()=>openModal(30);scene.appendChild(trophy);
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT + POLLING
+// ─────────────────────────────────────────────────────────────
+const statusBar = document.getElementById('statusBar');
+const loader    = document.getElementById('loader');
+let refreshTimer = null;
+
+let failCount = 0;
+
+async function refresh(showLoader=false) {
+  if (showLoader) loader.style.display='flex';
+  try {
+    const games = await fetchGames();
+    lastGoodGames = games;
+    failCount = 0;
+    buildFromAPI(games);
+    build();
+    loader.style.display='none';
+
+    const now = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    const hasLive = MATCHES.slice(0,16).some(m=>m.status==='live');
+    const liveText = hasLive ? ' · <span class="live-badge">⬤ LIVE</span>' : '';
+    statusBar.innerHTML = `<span class="ok">Updated ${now}${liveText}</span>`;
+
+    scheduleNext(hasLive ? 30000 : 60000);
+  } catch(e) {
+    failCount++;
+    console.warn(`Fetch failed (attempt ${failCount}):`, e.message);
+    loader.style.display='none';
+
+    if (lastGoodGames) {
+      statusBar.innerHTML = `<span class="err">⚠ Update failed (${failCount}×) — showing last data</span>`;
     } else {
-      circle.appendChild(tbdSpan());
+      statusBar.innerHTML = `<span class="err">⚠ Could not load data — retrying…</span>`;
     }
-    el.appendChild(circle);
-    scene.appendChild(el);
+    // back off a bit on repeated failures so we're not hammering a dead endpoint
+    const retryMs = Math.min(15000 * Math.pow(1.5, Math.min(failCount,5)), 60000);
+    scheduleNext(retryMs);
   }
-
-  // Opponent (TBD) nodes
-  for (let i=0; i<16; i++) {
-    const r16Id = 16 + Math.floor(i/2);
-    const pt = ptOpp[i];
-    const el = document.createElement('div');
-    el.className = 'opp-node';
-    el.style.left = pt.x+'px'; el.style.top = pt.y+'px';
-    el.onclick = () => openModal(r16Id);
-    const circle = document.createElement('div');
-    circle.className = 'opp-circle';
-    circle.appendChild(tbdSpan());
-    el.appendChild(circle);
-    scene.appendChild(el);
-  }
-
-  // R16 match nodes
-  for (let k=0; k<8; k++) {
-    const node = makeMatchNode(16+k, 'sz-r16');
-    place(node, ptJ16[k].x, ptJ16[k].y);
-    scene.appendChild(node);
-  }
-
-  // QF match nodes
-  for (let k=0; k<4; k++) {
-    const node = makeMatchNode(24+k, 'sz-qf');
-    place(node, ptQF[k].x, ptQF[k].y);
-    scene.appendChild(node);
-  }
-
-  // SF match nodes
-  const sfRight = makeMatchNode(28, 'sz-sf');
-  place(sfRight, ptSF[0].x, ptSF[0].y);
-  scene.appendChild(sfRight);
-  const sfLeft = makeMatchNode(29, 'sz-sf');
-  place(sfLeft, ptSF[1].x, ptSF[1].y);
-  scene.appendChild(sfLeft);
-
-  // Trophy / Final
-  const C2px = S/2;
-  const trophy = document.createElement('div');
-  trophy.className = 'trophy-node';
-  trophy.style.left = C2px+'px'; trophy.style.top = C2px+'px';
-  trophy.innerHTML = `<div class="trophy-wrap">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/FIFA_World_Cup_2022_Qatar_Trophy.png/240px-FIFA_World_Cup_2022_Qatar_Trophy.png"
-      alt="World Cup Trophy"
-      onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/e/ec/FIFA_World_Cup_Trophy.svg/240px-FIFA_World_Cup_Trophy.svg.png'"/>
-  </div>`;
-  trophy.onclick = () => openModal(30);
-  scene.appendChild(trophy);
 }
 
-// ─────────────────────────────────────────────────────────────
-// INIT + AUTO-REFRESH
-// ─────────────────────────────────────────────────────────────
-async function init() {
-  document.getElementById('loadingState').style.display = 'flex';
-  buildMatchesFromEmbedded();
-
-  // Try live update
-  const liveData = await fetchLiveData();
-  if (liveData) {
-    mergeESPNData(liveData);
-    const now = new Date();
-    document.getElementById('lastUpdate').innerHTML =
-      `Live data · Updated <span>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</span>`;
-  } else {
-    document.getElementById('lastUpdate').innerHTML =
-      `<span>Using latest snapshot · Live updates unavailable</span>`;
-  }
-
-  document.getElementById('loadingState').style.display = 'none';
-  build();
-}
-
-// Auto-refresh: 30s if any live game, 60s otherwise
-function scheduleRefresh() {
-  const hasLive = MATCHES.slice(0,16).some(m => m.status === 'live');
-  const interval = hasLive ? 30000 : 60000;
-  setTimeout(async () => {
-    const liveData = await fetchLiveData();
-    if (liveData) {
-      mergeESPNData(liveData);
-      const now = new Date();
-      document.getElementById('lastUpdate').innerHTML =
-        `Live data · Updated <span>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</span>`;
-      build();
-    }
-    scheduleRefresh();
-  }, interval);
+function scheduleNext(ms) {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => refresh(false), ms);
 }
 
 let rTimer;
-window.addEventListener('resize', () => { clearTimeout(rTimer); rTimer = setTimeout(build, 120); });
-document.fonts.ready.then(() => { init().then(scheduleRefresh); });
+window.addEventListener('resize', ()=>{ clearTimeout(rTimer); rTimer=setTimeout(build,120); });
+document.fonts.ready.then(() => refresh(true));
 
 // ─────────────────────────────────────────────────────────────
 // MODAL
 // ─────────────────────────────────────────────────────────────
 function openModal(id) {
-  const m = MATCHES[id];
-  document.getElementById('mRound').textContent = m.r;
-  const n1 = m.n1 || 'TBD';
-  const n2 = m.n2 || 'TBD';
-  document.getElementById('mImg1').src = flagUrl(n1, 80) || '';
-  document.getElementById('mImg2').src = flagUrl(n2, 80) || '';
-  document.getElementById('mN1').textContent = n1;
-  document.getElementById('mN2').textContent = n2;
-  document.getElementById('mN1').className = 'modal-tname'+(m.w===1?' w':'');
-  document.getElementById('mN2').className = 'modal-tname'+(m.w===2?' w':'');
-  document.getElementById('mScore').textContent = m.s1!==null ? `${m.s1} — ${m.s2}` : '– vs –';
-  document.getElementById('mDate').textContent  = m.date  || 'TBD';
-  document.getElementById('mVenue').textContent = m.venue || 'TBD';
-  const badge    = document.getElementById('mBadge');
-  const probWrap = document.getElementById('mProbWrap');
-  if (m.status === 'live') {
-    badge.textContent = '🔴 Live Now';
-    badge.className = 'badge b-live';
-    probWrap.style.display = 'none';
-  } else if (m.s1 !== null) {
-    badge.textContent = m.w===0 ? 'Draw' : 'Full Time';
-    badge.className = 'badge b-done';
-    probWrap.style.display = 'none';
-  } else if (n1 === 'TBD') {
-    badge.textContent = 'Not Yet Set';
-    badge.className = 'badge b-tbd';
-    probWrap.style.display = 'none';
-  } else {
-    badge.textContent = 'Upcoming';
-    badge.className = 'badge b-upcoming';
-    if (m.prob) {
-      const [p1,pd,p2] = m.prob;
-      document.getElementById('mProbLabel').textContent =
-        `Win prob: ${n1} ${p1}% · Draw ${pd}% · ${n2} ${p2}%`;
-      document.getElementById('mProbBar').innerHTML = `
-        <div class="prob-seg" style="flex:${p1};background:#4a7fd4;opacity:.85"></div>
-        <div class="prob-seg" style="flex:${pd};background:#555;opacity:.85"></div>
-        <div class="prob-seg" style="flex:${p2};background:#c9a84c;opacity:.85"></div>`;
-      probWrap.style.display = 'block';
-    } else { probWrap.style.display = 'none'; }
+  const m=MATCHES[id];
+  const n1=m.n1||'TBD', n2=m.n2||'TBD';
+  document.getElementById('mRound').textContent=m.r;
+  document.getElementById('mImg1').src=flagUrl(n1)||'';
+  document.getElementById('mImg2').src=flagUrl(n2)||'';
+  document.getElementById('mN1').textContent=n1;
+  document.getElementById('mN2').textContent=n2;
+  document.getElementById('mN1').className='modal-tname'+(m.w===1?' w':'');
+  document.getElementById('mN2').className='modal-tname'+(m.w===2?' w':'');
+  document.getElementById('mScore').textContent=m.s1!==null?`${m.s1} — ${m.s2}`:'– vs –';
+  document.getElementById('mDate').textContent=m.date||'TBD';
+  document.getElementById('mVenue').textContent=m.venue||'TBD';
+  const badge=document.getElementById('mBadge');
+  const probWrap=document.getElementById('mProbWrap');
+  if(m.status==='live'){badge.textContent='🔴 Live Now';badge.className='badge b-live';probWrap.style.display='none';}
+  else if(m.status==='final'){badge.textContent=m.w===0?'Draw · FT':'Full Time';badge.className='badge b-done';probWrap.style.display='none';}
+  else if(n1==='TBD'){badge.textContent='Not Yet Set';badge.className='badge b-tbd';probWrap.style.display='none';}
+  else{
+    badge.textContent='Upcoming';badge.className='badge b-upcoming';
+    if(m.prob){
+      document.getElementById('mProbLabel').textContent=`Win prob: ${n1} ${m.prob.home}% · ${n2} ${m.prob.away}%`;
+      document.getElementById('mProbBar').innerHTML=`<div class="prob-seg" style="flex:${m.prob.home};background:#4a7fd4;opacity:.85"></div><div class="prob-seg" style="flex:${m.prob.away};background:#c9a84c;opacity:.85"></div>`;
+      probWrap.style.display='block';
+    } else probWrap.style.display='none';
   }
   document.getElementById('overlay').classList.add('open');
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); }
-document.getElementById('overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 </script>
 </body>
 </html>
