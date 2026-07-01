@@ -226,78 +226,68 @@ function normalizeGame(homeAbbr, awayAbbr, homeName, awayName,
            date: localStart || '', venue: venue || '' };
 }
 
-async function fetchFromSportsAPI() {
-  // worldcupjson.net is CORS-open and matches the sportradar data
-  const res = await fetch('https://worldcupjson.net/matches',
-    { signal: AbortSignal.timeout(8000), cache: 'no-store' });
-  if (!res.ok) throw new Error(`wcjson ${res.status}`);
-  const data = await res.json();
-  const matches = Array.isArray(data) ? data : (data.matches || []);
-  if (!matches.length) throw new Error('wcjson empty');
-  return matches.map(m => {
-    const status = (m.status||'').toLowerCase().replace(' ','_');
-    const hs = m.home_team?.goals ?? null;
-    const as = m.away_team?.goals ?? null;
-    const dt = m.datetime ? new Date(m.datetime) : null;
-    const localStart = dt
-      ? dt.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/Chicago'}) +
-        ' · ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Chicago',timeZoneName:'short'})
-      : '';
-    return normalizeGame(
-      (m.home_team?.code||'').toUpperCase(),
-      (m.away_team?.code||'').toUpperCase(),
-      m.home_team?.country||'', m.away_team?.country||'',
-      hs, as, status, null, localStart, m.venue||''
-    );
-  });
-}
-
-async function fetchFromESPN() {
-  const res = await fetch(
-    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
-    { signal: AbortSignal.timeout(8000), cache: 'no-store' });
-  if (!res.ok) throw new Error(`ESPN ${res.status}`);
-  const d = await res.json();
-  const events = d.events || [];
-  if (!events.length) throw new Error('ESPN empty');
-  return events.map(ev => {
-    const comp = ev.competitions?.[0] || {};
-    const cx   = comp.competitors || [];
-    const home = cx.find(c => c.homeAway==='home') || cx[0] || {};
-    const away = cx.find(c => c.homeAway==='away') || cx[1] || {};
-    const sn   = ev.status?.type?.name || '';
-    const isDone = sn==='STATUS_FINAL';
-    const isLive = sn==='STATUS_IN_PROGRESS'||sn==='STATUS_HALFTIME';
-    const status = isDone ? 'final' : isLive ? 'live' : 'upcoming';
-    const hs = (isDone||isLive) ? +home.score : null;
-    const as = (isDone||isLive) ? +away.score : null;
-    let prob = null;
-    const pred = comp.predictor;
-    if (pred && !isDone) {
-      const hp = pred.homeTeam?.gameProjection;
-      const ap = pred.awayTeam?.gameProjection;
-      if (hp && ap) prob = { home: Math.round(hp), away: Math.round(ap) };
-    }
-    const dt = new Date(ev.date);
-    const localStart = dt.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/Chicago'}) +
-      ' · ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Chicago',timeZoneName:'short'});
-    return normalizeGame(
-      home.team?.abbreviation||'', away.team?.abbreviation||'',
-      home.team?.displayName||'', away.team?.displayName||'',
-      hs, as, status, prob ? {[home.team?.abbreviation]: prob.home, [away.team?.abbreviation]: prob.away} : null,
-      localStart, comp.venue?.fullName||''
-    );
-  });
-}
-
+// ── Fetch via Anthropic API (has native sports tool access, no CORS issues) ──
 async function fetchGames() {
-  try { return await fetchFromSportsAPI(); }
-  catch(e1) {
-    console.warn('Primary fetch failed, trying ESPN:', e1.message);
-    try { return await fetchFromESPN(); }
-    catch(e2) { throw new Error('All sources failed'); }
-  }
+  const prompt = `Use your fetch_sports_data tool to get current FIFA World Cup 2026 scores with league="world_cup" and data_type="scores". Then return ONLY a JSON array (no markdown, no explanation) where each element is:
+{"homeAbbr":"XXX","awayAbbr":"XXX","homeName":"Full Name","awayName":"Full Name","homeScore":N_or_null,"awayScore":N_or_null,"status":"final|in_progress|scheduled","winProbHome":N_or_null,"winProbAway":N_or_null,"date":"Mon Jun 29, 12:00 PM CDT","venue":"Stadium Name"}
+Use null for scores if the match hasn't started. Use status "in_progress" for live matches.`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
+  const data = await res.json();
+  const text = (data.content||[]).map(b => b.text||'').join('');
+  // Strip any accidental markdown fences
+  const clean = text.replace(/```json|```/g,'').trim();
+  const games = JSON.parse(clean);
+
+  return games.map(g => {
+    const isDone = g.status === 'final';
+    const isLive = g.status === 'in_progress';
+    const hs = g.homeScore;
+    const as = g.awayScore;
+    let w = null;
+    if (isDone && hs !== null && as !== null) w = hs > as ? 1 : as > hs ? 2 : 0;
+    const prob = (g.winProbHome && g.winProbAway)
+      ? { home: Math.round(g.winProbHome), away: Math.round(g.winProbAway) }
+      : null;
+    return {
+      homeAbbr: g.homeAbbr, awayAbbr: g.awayAbbr,
+      homeName: g.homeName, awayName: g.awayName,
+      homeScore: hs, awayScore: as,
+      winner: w, isDone, isLive, prob,
+      date: g.date || '', venue: g.venue || '',
+    };
+  });
 }
+
+// ── Baked-in snapshot — renders instantly, then API overwrites ──
+// Last updated from live sports tool. Keys match SLOTS exactly.
+const INITIAL_GAMES = [
+  {homeAbbr:'RSA',awayAbbr:'CAN',homeName:'South Africa',awayName:'Canada',        homeScore:0,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Sun Jun 28, 2:00 PM CDT', venue:'SoFi Stadium, Los Angeles'},
+  {homeAbbr:'BRA',awayAbbr:'JPN',homeName:'Brazil',      awayName:'Japan',          homeScore:2,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 12:00 PM CDT',venue:'NRG Stadium, Houston'},
+  {homeAbbr:'GER',awayAbbr:'PAR',homeName:'Germany',     awayName:'Paraguay',       homeScore:1,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 3:30 PM CDT', venue:'Gillette Stadium, Foxborough'},
+  {homeAbbr:'NED',awayAbbr:'MAR',homeName:'Netherlands', awayName:'Morocco',        homeScore:1,awayScore:1,status:'final',  winProbHome:null,winProbAway:null, date:'Mon Jun 29, 8:00 PM CDT', venue:'Estadio BBVA, Monterrey'},
+  {homeAbbr:'CIV',awayAbbr:'NOR',homeName:'Ivory Coast', awayName:'Norway',         homeScore:1,awayScore:2,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 12:00 PM CDT',venue:'AT&T Stadium, Arlington'},
+  {homeAbbr:'FRA',awayAbbr:'SWE',homeName:'France',      awayName:'Sweden',         homeScore:3,awayScore:0,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 4:00 PM CDT', venue:'MetLife Stadium, New Jersey'},
+  {homeAbbr:'MEX',awayAbbr:'ECU',homeName:'Mexico',      awayName:'Ecuador',        homeScore:2,awayScore:0,status:'final',  winProbHome:null,winProbAway:null, date:'Tue Jun 30, 9:00 PM CDT', venue:'Estadio Azteca, Mexico City'},
+  {homeAbbr:'ENG',awayAbbr:'COD',homeName:'England',     awayName:'Congo DR',       homeScore:null,awayScore:null,status:'scheduled',winProbHome:75.2,winProbAway:7.6,  date:'Wed Jul 1, 11:00 AM CDT',venue:'Mercedes-Benz Stadium, Atlanta'},
+  {homeAbbr:'BEL',awayAbbr:'SEN',homeName:'Belgium',     awayName:'Senegal',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:44.6,winProbAway:26.5, date:'Wed Jul 1, 3:00 PM CDT', venue:'Lumen Field, Seattle'},
+  {homeAbbr:'USA',awayAbbr:'BIH',homeName:'USA',         awayName:'Bosnia & Herz.', homeScore:null,awayScore:null,status:'scheduled',winProbHome:69.4,winProbAway:11.7, date:'Wed Jul 1, 7:00 PM CDT', venue:"Levi's Stadium, Santa Clara"},
+  {homeAbbr:'ESP',awayAbbr:'AUT',homeName:'Spain',       awayName:'Austria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:72.9,winProbAway:9.5,  date:'Thu Jul 2, 2:00 PM CDT', venue:'SoFi Stadium, Los Angeles'},
+  {homeAbbr:'POR',awayAbbr:'CRO',homeName:'Portugal',    awayName:'Croatia',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:53.5,winProbAway:19.5, date:'Thu Jul 2, 6:00 PM CDT', venue:'BMO Field, Toronto'},
+  {homeAbbr:'SUI',awayAbbr:'DZA',homeName:'Switzerland', awayName:'Algeria',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:47.2,winProbAway:23.6, date:'Thu Jul 2, 10:00 PM CDT',venue:'BC Place, Vancouver'},
+  {homeAbbr:'ARG',awayAbbr:'CPV',homeName:'Argentina',   awayName:'Cape Verde',     homeScore:null,awayScore:null,status:'scheduled',winProbHome:83.2,winProbAway:4.8,  date:'Fri Jul 3, 5:00 PM CDT', venue:'Hard Rock Stadium, Miami'},
+  {homeAbbr:'COL',awayAbbr:'GHA',homeName:'Colombia',    awayName:'Ghana',          homeScore:null,awayScore:null,status:'scheduled',winProbHome:63.6,winProbAway:13.2, date:'Fri Jul 3, 8:30 PM CDT', venue:'Arrowhead Stadium, Kansas City'},
+  {homeAbbr:'CAN',awayAbbr:'MAR',homeName:'Canada',      awayName:'Morocco',        homeScore:null,awayScore:null,status:'scheduled',winProbHome:20.2,winProbAway:52.5, date:'Sat Jul 4, 12:00 PM CDT',venue:'NRG Stadium, Houston'},
+];
 
 // R16+ fixed schedule (teams filled by propagate())
 const LATER = [
@@ -613,7 +603,7 @@ function scheduleNext(ms) {
 
 let rTimer;
 window.addEventListener('resize', ()=>{ clearTimeout(rTimer); rTimer=setTimeout(build,120); });
-document.fonts.ready.then(() => refresh(true));
+document.fonts.ready.then(() => { buildFromAPI(INITIAL_GAMES); build(); loader.style.display='none'; statusBar.innerHTML='<span class="ok">Snapshot loaded · fetching live data…</span>'; refresh(false); });
 
 // ─────────────────────────────────────────────────────────────
 // MODAL
