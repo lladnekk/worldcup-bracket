@@ -226,46 +226,10 @@ function normalizeGame(homeAbbr, awayAbbr, homeName, awayName,
            date: localStart || '', venue: venue || '' };
 }
 
-// ── Fetch via Anthropic API (has native sports tool access, no CORS issues) ──
+// No live API available in standalone HTML — data comes from INITIAL_GAMES snapshot.
+// To get fresh data, re-download this file from Claude (it embeds the latest scores).
 async function fetchGames() {
-  const prompt = `Use your fetch_sports_data tool to get current FIFA World Cup 2026 scores with league="world_cup" and data_type="scores". Then return ONLY a JSON array (no markdown, no explanation) where each element is:
-{"homeAbbr":"XXX","awayAbbr":"XXX","homeName":"Full Name","awayName":"Full Name","homeScore":N_or_null,"awayScore":N_or_null,"status":"final|in_progress|scheduled","winProbHome":N_or_null,"winProbAway":N_or_null,"date":"Mon Jun 29, 12:00 PM CDT","venue":"Stadium Name"}
-Use null for scores if the match hasn't started. Use status "in_progress" for live matches.`;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
-  const data = await res.json();
-  const text = (data.content||[]).map(b => b.text||'').join('');
-  // Strip any accidental markdown fences
-  const clean = text.replace(/```json|```/g,'').trim();
-  const games = JSON.parse(clean);
-
-  return games.map(g => {
-    const isDone = g.status === 'final';
-    const isLive = g.status === 'in_progress';
-    const hs = g.homeScore;
-    const as = g.awayScore;
-    let w = null;
-    if (isDone && hs !== null && as !== null) w = hs > as ? 1 : as > hs ? 2 : 0;
-    const prob = (g.winProbHome && g.winProbAway)
-      ? { home: Math.round(g.winProbHome), away: Math.round(g.winProbAway) }
-      : null;
-    return {
-      homeAbbr: g.homeAbbr, awayAbbr: g.awayAbbr,
-      homeName: g.homeName, awayName: g.awayName,
-      homeScore: hs, awayScore: as,
-      winner: w, isDone, isLive, prob,
-      date: g.date || '', venue: g.venue || '',
-    };
-  });
+  throw new Error('Standalone mode — using snapshot only');
 }
 
 // ── Baked-in snapshot — renders instantly, then API overwrites ──
@@ -331,16 +295,21 @@ function buildFromAPI(games) {
     );
 
     if (g) {
-      // Normalise so n1=home, n2=away (as listed in API)
-      const flipped = g.homeAbbr===slot.b; // API has them reversed vs our slot def
+      const s1 = g.homeScore ?? null, s2 = g.awayScore ?? null;
+      const isDone = g.status === 'final' || g.isDone;
+      const isLive = g.status === 'in_progress' || g.isLive;
+      // Always compute winner from scores — never trust a pre-set field
+      let w = null;
+      if (isDone && s1 !== null && s2 !== null) {
+        w = s1 > s2 ? 1 : s2 > s1 ? 2 : 0;
+      }
       MATCHES.push({
         id: i, r: 'Round of 32',
         n1: g.homeName, n2: g.awayName,
-        s1: g.homeScore, s2: g.awayScore,
-        w:  g.winner,   // 1=home(n1) wins, 2=away(n2) wins, 0=draw, null=upcoming
-        status: g.isLive ? 'live' : g.isDone ? 'final' : 'upcoming',
-        prob: g.prob,
-        date: g.date, venue: g.venue,
+        s1, s2, w,
+        status: isLive ? 'live' : isDone ? 'final' : 'upcoming',
+        prob: g.prob || null,
+        date: g.date || '', venue: g.venue || '',
       });
     } else {
       // Game not in API yet (future / not fetched) — placeholder
@@ -603,7 +572,17 @@ function scheduleNext(ms) {
 
 let rTimer;
 window.addEventListener('resize', ()=>{ clearTimeout(rTimer); rTimer=setTimeout(build,120); });
-document.fonts.ready.then(() => { buildFromAPI(INITIAL_GAMES); build(); loader.style.display='none'; statusBar.innerHTML='<span class="ok">Snapshot loaded · fetching live data…</span>'; refresh(false); });
+document.fonts.ready.then(() => {
+  buildFromAPI(INITIAL_GAMES);
+  build();
+  loader.style.display = 'none';
+  const now = new Date();
+  const hasLive = MATCHES.slice(0,16).some(m => m.status === 'live');
+  const liveText = hasLive ? ' · <span class="live-badge">⬤ LIVE</span>' : '';
+  statusBar.innerHTML = '<span class="ok">Data as of ' +
+    now.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+    ' · Re-download for updates' + liveText + '</span>';
+});
 
 // ─────────────────────────────────────────────────────────────
 // MODAL
